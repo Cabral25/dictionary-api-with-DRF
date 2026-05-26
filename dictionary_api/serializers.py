@@ -1,5 +1,5 @@
 from rest_framework.serializers import ModelSerializer
-from .models import User, Words
+from .models import User, Word
 
 
 class UserSerializer(ModelSerializer):
@@ -13,5 +13,5 @@ class UserSerializer(ModelSerializer):
 class WordSerializer(ModelSerializer):
     
     class Meta:
-        model = Words
+        model = Word
         fields = '__all__'
