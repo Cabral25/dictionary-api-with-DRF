@@ -131,3 +131,5 @@ rest_framework = {
         'rest_framework.permissions.IsAuthenticated',
     ]
 }
+
+AUTH_USER_MODEL = 'dictionary_api.User'
