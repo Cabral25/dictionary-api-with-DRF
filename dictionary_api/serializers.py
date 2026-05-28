@@ -71,6 +71,16 @@ class UserSerializer(ModelSerializer):
 
 
 class WordSerializer(ModelSerializer):
+    """
+        Serializer responsável pela serialização e
+        desserialização de palavras registradas.
+
+        Funções principais:
+        - converter objetos Word em JSON;
+        - validar dados recebidos da API;
+        - criar palavras no banco de dados;
+        - controlar quais campos serão expostos.
+    """
     
     class Meta:
         model = Word
