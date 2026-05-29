@@ -36,7 +36,16 @@ class User(AbstractUser):
         da aplicação sem precisar reimplementar todo o sistema
         de autenticação do Django.
     """
-    id = models.IntegerField()
+
+    class Meta:
+
+        verbose_name = 'User'
+
+        verbose_name_plural = 'Users'
+
+
+    def __str__(self):
+        return self.username
 
 
 

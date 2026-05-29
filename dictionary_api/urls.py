@@ -3,10 +3,6 @@ from .views import *
 from django.urls import path, include
 
 
-router = DefaultRouter()
-router.register(r'palavras', HomeView)
-
-
 urlpatterns = [
-    path('', include(router.urls))
+    path('', HomeView.as_view())
 ]
