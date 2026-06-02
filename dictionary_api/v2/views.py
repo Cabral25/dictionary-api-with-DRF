@@ -7,3 +7,8 @@ from ..models import Word
 
 class ListWords(ListCreateAPIView):
     query = Word.objects.all()
+
+
+
+class LoginView():
+    pass

@@ -49,6 +49,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'rest_framework.authtoken',
     'dictionary_api',
+    'django_extensions',
 ]
 
 MIDDLEWARE = [
@@ -142,11 +143,11 @@ REST_FRAMEWORK = {
     ],
 
     'DEFAULT_PERMISSION_CLASSES': [
-        'rest_framework.permissions.IsAuthenticated',
+        'rest_framework.permissions.AllowAny',
     ]
 }
 
-# Custom Use Model
+# Custom User Model
 AUTH_USER_MODEL = 'dictionary_api.User'
 
 
