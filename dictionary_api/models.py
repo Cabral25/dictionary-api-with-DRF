@@ -50,13 +50,18 @@ class User(AbstractUser):
 
 
 class Word(models.Model):
-    word_id = models.IntegerField()
-    word = models.CharField(unique=True)
+    word = models.CharField(max_length=46, unique=True)
     meaning = models.TextField()
-    example = models.TextField()
-    created_by = models.ForeignKey(User, on_delete=models.CASCADE)
+    example = models.TextField(blank=True)
+    created_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name='words')
     created_at = models.DateTimeField(auto_now_add=True) # auto_now_add define a data/hora apenas uma vez: no momento de criar o objeto
     updated_at = models.DateTimeField(auto_now=True) # auto_now atualiza toda vez que o objeto é salvo
+
+
+    class Meta:
+        verbose_name = 'Word'
+        verbose_name_plural = 'Words'
+        ordering = ['word']
 
     def __str__(self):
         return self.word

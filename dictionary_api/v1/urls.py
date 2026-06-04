@@ -1,7 +1,8 @@
 from .views import *
-from django.urls import path, include
+from django.urls import path
+
 
 urlpatterns = [
-    path('', ListWords.as_view()),
+    path('words/', ListWords.as_view(), name='words'),
     path('login/', LoginView.as_view(), name='login-v1'),
 ]
