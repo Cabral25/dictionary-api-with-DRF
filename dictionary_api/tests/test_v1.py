@@ -4,7 +4,55 @@ from django.contrib.auth import get_user_model
 
 from dictionary_api.models import Word
 
+
 User = get_user_model()
+
+
+class LoginViewTest(APITestCase):
+    
+    def test_login_valid_credentials(self):
+        user = User.objects.create_user(
+            username='nome',
+            password='12345'
+        )
+
+        data = {
+            'username': 'nome',
+            'password': '12345'
+        }
+        
+        response = self.client.post(reverse('login-v1'), data=data)
+        print(response.content)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data['message'], 'Login realizado com sucesso')
+
+    
+    def test_login_invalid_credentials(self):
+
+        User.objects.create_user(
+            username='nome',
+            password='12345'
+        )
+
+        data = {
+            'username': 'nome',
+            'password': '54321'
+        }
+        response = self.client.post(reverse('login-v1'), data=data)
+        print('data', response.data)
+        print('content', response.content)
+        self.assertEqual(response.status_code, 401)
+        self.assertEqual(response.data['error'], 'Credenciais inválidas')
+
+    
+    def test_login_with_nonexistent_user(self):
+
+        data = {
+            'username': 'nome',
+            'password': '54321'
+        }
+        response = self.client.post(reverse('login-v1'), data=data)
+        self.assertEqual(response.status_code, 401)
 
 
 class ListWordTests(APITestCase):

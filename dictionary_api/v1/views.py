@@ -3,7 +3,7 @@ from rest_framework.views import APIView
 from rest_framework.generics import ListCreateAPIView, ListAPIView
 from rest_framework.response import Response
 from ..models import Word
-from .serializers import WordSerializerV1
+from .serializers import WordSerializerV1, LoginSerializer
 
 from django.contrib.auth import authenticate, login
 from rest_framework import status
@@ -30,8 +30,13 @@ class LoginView(APIView):
     permission_classes = [AllowAny]
 
     def post(self, request):
-        username = request.data.get('username')
-        password = request.data.get('password')
+
+        serializer = LoginSerializer(data=request.data)
+
+        serializer.is_valid(raise_exception=True)
+
+        username = serializer.validated_data['username']
+        password = serializer.validated_data['password']
 
         user = authenticate(request, username=username, password=password)
 
