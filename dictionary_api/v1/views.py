@@ -1,6 +1,6 @@
 from rest_framework.permissions import IsAdminUser, IsAuthenticated, AllowAny
 from rest_framework.views import APIView
-from rest_framework.generics import ListCreateAPIView, ListAPIView
+from rest_framework.generics import ListCreateAPIView, ListAPIView, RetrieveAPIView
 from rest_framework.response import Response
 from ..models import Word
 from .serializers import WordSerializerV1, LoginSerializer
@@ -23,6 +23,20 @@ class ListWords(ListCreateAPIView):
         if self.request.method == 'GET':
             return [AllowAny()]
         return [IsAdminUser()]
+
+
+
+class DetailWordView(RetrieveAPIView):
+    """
+        Rota que permite mostrar em detalhes uma
+        palavra registrada. Usa a versão 1 do
+        serializador de palavras. Qualquer um pode
+        acessar essa rota.
+    """
+    queryset = Word.objects.all()
+    serializer_class = WordSerializerV1
+    permission_classes = [AllowAny]
+    lookup_field = 'word'
 
 
 class LoginView(APIView):

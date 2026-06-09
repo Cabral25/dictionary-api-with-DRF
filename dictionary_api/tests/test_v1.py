@@ -3,6 +3,7 @@ from django.urls import reverse
 from django.contrib.auth import get_user_model
 
 from dictionary_api.models import Word
+from dictionary_api.v1.serializers import LoginSerializer
 
 
 User = get_user_model()
@@ -22,7 +23,6 @@ class LoginViewTest(APITestCase):
         }
         
         response = self.client.post(reverse('login-v1'), data=data)
-        print(response.content)
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.data['message'], 'Login realizado com sucesso')
 
@@ -39,8 +39,6 @@ class LoginViewTest(APITestCase):
             'password': '54321'
         }
         response = self.client.post(reverse('login-v1'), data=data)
-        print('data', response.data)
-        print('content', response.content)
         self.assertEqual(response.status_code, 401)
         self.assertEqual(response.data['error'], 'Credenciais inválidas')
 
@@ -53,6 +51,43 @@ class LoginViewTest(APITestCase):
         }
         response = self.client.post(reverse('login-v1'), data=data)
         self.assertEqual(response.status_code, 401)
+
+    
+    def test_session_is_created_after_login(self):
+
+        User.objects.create_user(
+            username='nome',
+            password='12345'
+        )
+
+        data = {
+            'username': 'nome',
+            'password': '12345'
+        }
+        response = self.client.post(reverse('login-v1'), data=data)
+        self.assertEqual(response.status_code, 200)
+        self.assertIn('_auth_user_id', self.client.session)
+
+    
+    def test_login_serializer_requires_username(self):
+
+        serializer = LoginSerializer(
+            data={
+                'password': '12345'
+            }
+        )
+        self.assertFalse(serializer.is_valid())
+
+    
+    def test_login_serializer_requires_password(self):
+
+        serializer = LoginSerializer(
+            data={
+                'username': 'nome'
+            }
+        )
+        self.assertFalse(serializer.is_valid())
+
 
 
 class ListWordTests(APITestCase):
@@ -117,3 +152,53 @@ class ListWordTests(APITestCase):
         print(response.content)
         self.assertEqual(response.status_code, 403)
         self.assertEqual(response.content, b'{"detail":"You do not have permission to perform this action."}')
+
+
+
+class DetailWordViewTest(APITestCase):
+    
+    def test_get_existing_word_success(self):
+        word = Word.objects.create(
+            word='palavra',
+            meaning='menor unidade de uma língua'
+        )
+        response = self.client.get(reverse('word-detail-v1', kwargs={'word': 'palavra'}))
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data['word'], 'palavra')
+
+    
+    def test_get_inexistent_word(self):
+        response = self.client.get(reverse('word-detail-v1', kwargs={'word': 'java'}))
+        self.assertEqual(response.status_code, 404)
+
+    
+    def test_anonymous_user_can_access_detail_view(self):
+
+        Word.objects.create(
+            word='python',
+            meaning='Linguagem'
+        )
+
+        response = self.client.get(
+            reverse(
+                'word-detail-v1',
+                kwargs={'word': 'python'}
+            )
+        )
+
+        self.assertEqual(
+            response.status_code,
+            200
+        )
+
+    
+    def test_lookup_is_performed_using_word_field(self):
+
+        Word.objects.create(
+            word='palavra',
+            meaning='any meaning'
+        )
+
+        response = self.client.get(reverse('word-detail-v1', kwargs={'word': 'palavra'}))
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data['word'], 'palavra')
