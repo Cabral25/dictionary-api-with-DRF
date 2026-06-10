@@ -1,20 +1,21 @@
 from rest_framework.permissions import IsAdminUser, IsAuthenticated, AllowAny
 from rest_framework.views import APIView
-from rest_framework.generics import ListCreateAPIView, ListAPIView, RetrieveAPIView
+from rest_framework.generics import ListCreateAPIView, RetrieveAPIView
 from rest_framework.response import Response
 from ..models import Word
 from .serializers import WordSerializerV1, LoginSerializer
 
-from django.contrib.auth import authenticate, login
+from django.contrib.auth import authenticate, login, logout
 from rest_framework import status
 
 
 class ListWords(ListCreateAPIView):
     """
         Endpoint que permite listar as palavras
-        registradas. Usa a versão 1 do serializador
-        de palavras. Qualquer um pode acessar essa
-        rota, mas somente admins podem criar objetos.
+        registradas e registrar novas. Usa a versão 
+        1 do serializador de palavras. Qualquer um 
+        pode acessar essa rota, mas somente admins 
+        podem criar objetos.
     """
     queryset = Word.objects.all()
     serializer_class = WordSerializerV1
@@ -37,6 +38,22 @@ class DetailWordView(RetrieveAPIView):
     serializer_class = WordSerializerV1
     permission_classes = [AllowAny]
     lookup_field = 'word'
+
+
+
+class SearchWordView():
+    pass
+
+
+
+class UpdateWordView():
+    pass
+
+
+
+class DeleteWordView():
+    pass
+
 
 
 class LoginView(APIView):
@@ -66,6 +83,22 @@ class LoginView(APIView):
         return Response(
             {
                 'message': 'Login realizado com sucesso'
+            },
+            status=status.HTTP_200_OK
+        )
+    
+
+
+class LogoutView(APIView):
+    
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        logout(request)
+
+        return Response(
+            {
+                'message': 'Logout realizado com sucesso'
             },
             status=status.HTTP_200_OK
         )

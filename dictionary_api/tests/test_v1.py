@@ -51,6 +51,7 @@ class LoginViewTest(APITestCase):
         }
         response = self.client.post(reverse('login-v1'), data=data)
         self.assertEqual(response.status_code, 401)
+        self.assertEqual(response.data['error'], 'Credenciais inválidas')
 
     
     def test_session_is_created_after_login(self):
@@ -90,7 +91,31 @@ class LoginViewTest(APITestCase):
 
 
 
-class ListWordTests(APITestCase):
+class LogoutViewTests(APITestCase):
+    
+    def test_authenticated_user_can_logout(self):
+        user = User.objects.create_user(
+            username='nome',
+            password='12345'
+        )
+
+        self.client.force_login(user)
+
+        response = self.client.post(reverse('logout-v1'))
+        print(response.data)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data['message'], 'Logout realizado com sucesso')
+
+    
+    def test_anonymous_user_cannot_logout(self):
+        response = self.client.post(reverse('logout-v1'))
+        print(response.data)
+        self.assertEqual(response.status_code, 403)
+        self.assertEqual(response.data['detail'], 'Authentication credentials were not provided.')
+
+
+
+class ListCreateWordTests(APITestCase):
     
     def test_anyone_can_list_words(self):
 
@@ -111,7 +136,9 @@ class ListWordTests(APITestCase):
             'meaning': 'framework'
         }
         response = self.client.post(reverse('words'), data=data)
+        print(response.data)
         self.assertEqual(response.status_code, 403)
+        self.assertEqual(response.data['detail'], 'Authentication credentials were not provided.')
 
 
     def test_admin_can_create_word(self):
@@ -165,6 +192,8 @@ class DetailWordViewTest(APITestCase):
         response = self.client.get(reverse('word-detail-v1', kwargs={'word': 'palavra'}))
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.data['word'], 'palavra')
+        self.assertIn('word', response.data)
+        self.assertIn('meaning', response.data)
 
     
     def test_get_inexistent_word(self):
@@ -202,3 +231,29 @@ class DetailWordViewTest(APITestCase):
         response = self.client.get(reverse('word-detail-v1', kwargs={'word': 'palavra'}))
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.data['word'], 'palavra')
+
+    
+    def test_response_contains_expected_fields(self):
+
+        Word.objects.create(
+            word='python',
+            meaning='Linguagem'
+        )
+
+        response = self.client.get(
+            reverse(
+                'word-detail-v1',
+                kwargs={'word': 'python'}
+            )
+        )
+
+        self.assertIn(
+            'word',
+            response.data
+        )
+        self.assertIn(
+            'meaning',
+            response.data
+        )
+        self.assertNotIn('example', response.data)
+        self.assertNotIn('created_by', response.data)
