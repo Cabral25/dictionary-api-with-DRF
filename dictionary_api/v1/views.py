@@ -1,7 +1,15 @@
 from rest_framework.permissions import IsAdminUser, IsAuthenticated, AllowAny
 from rest_framework.views import APIView
-from rest_framework.generics import ListCreateAPIView, RetrieveAPIView
+from rest_framework.generics import (
+    ListCreateAPIView, 
+    RetrieveAPIView, 
+    RetrieveUpdateAPIView, 
+    RetrieveDestroyAPIView, 
+    RetrieveUpdateDestroyAPIView,
+    ListAPIView
+)
 from rest_framework.response import Response
+from rest_framework.filters import SearchFilter
 from ..models import Word
 from .serializers import WordSerializerV1, LoginSerializer
 
@@ -41,17 +49,31 @@ class DetailWordView(RetrieveAPIView):
 
 
 
-class SearchWordView():
+class SearchWordView(ListAPIView):
+    
+    serializer_class = WordSerializerV1
+    permission_classes = [AllowAny]
+
+    def get_queryset(self):
+
+        query = self.request.query_params.get('q')
+
+        if not query:
+            return Word.objects.none()
+        
+        # i = ignore case (encontra a palavra independente se ela estiver em maiúscula ou minúscula)
+        # contains = contém
+        # retorna a(s) palavra(s) que contém o valor de q em qualquer posição ({'q': 'casa'} retorna casa, casamento, etc)
+        return Word.objects.filter(word__icontains=query)
+
+
+
+class UpdateWordView(RetrieveUpdateAPIView):
     pass
 
 
 
-class UpdateWordView():
-    pass
-
-
-
-class DeleteWordView():
+class DeleteWordView(RetrieveDestroyAPIView):
     pass
 
 

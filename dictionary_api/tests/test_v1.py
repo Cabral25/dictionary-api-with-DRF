@@ -175,10 +175,48 @@ class ListCreateWordTests(APITestCase):
             'meaning': 'framework'
         }
         response = self.client.post(reverse('words'), data=data)
-        print('status code:', response.status_code)
-        print(response.content)
         self.assertEqual(response.status_code, 403)
         self.assertEqual(response.content, b'{"detail":"You do not have permission to perform this action."}')
+
+    
+    def test_missing_required_fields(self):
+
+        user = User.objects.create_superuser(
+            username='admin123',
+            password='anypassword321',
+            email='any@email.com'
+        )
+
+        self.client.force_authenticate(user=user)
+        data = {
+            'word': 'django',
+        }
+        response = self.client.post(reverse('words'), data=data)
+        print(response.data)
+        print('status: ', response.status_code)
+        print(response.request['REQUEST_METHOD'], response.request['PATH_INFO'])
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.data['meaning'][0], 'This field is required.')
+        self.assertEqual(response.request['PATH_INFO'], '/api/v1/words/')
+        self.assertEqual(response.request['REQUEST_METHOD'], 'POST')
+
+    
+    def test_invalid_data_type(self):
+        user = User.objects.create_superuser(
+            username='admin123',
+            password='anypassword321',
+            email='any@email.com'
+        )
+
+        self.client.force_authenticate(user=user)
+        data = {
+            'word': 90909,
+            'meaning': 'framework'
+        }
+        response = self.client.post(reverse('words'), data=data)
+        print(response.data)
+        print('status: ', response.status_code)
+        self.assertEqual(response.status_code, 400)
 
 
 
@@ -257,3 +295,31 @@ class DetailWordViewTest(APITestCase):
         )
         self.assertNotIn('example', response.data)
         self.assertNotIn('created_by', response.data)
+
+
+
+class SearchWordViewTests(APITestCase):
+    
+    def test_search_returns_matching_words(self):
+
+        Word.objects.create(
+            word='python',
+            meaning='...'
+        )
+
+        data = {'q': 'python'}
+        response = self.client.get(reverse('search-word-v1'), data=data)
+        print(response.data)
+        print(response.request['PATH_INFO'])
+        print('status: ', response.status_code)
+        self.assertEqual(response.status_code, 200)
+
+
+
+class UpdateWordViewTests(APITestCase):
+    pass
+
+
+
+class DeleteWordViewTests(APITestCase):
+    pass
