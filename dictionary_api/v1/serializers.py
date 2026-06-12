@@ -23,6 +23,21 @@ class WordSerializerV1(ModelSerializer):
             'created_at',
             'updated_at'
         ]
+    
+    def validate_word(self, value):
+
+        if value.isdigit():
+            raise serializers.ValidationError(
+                'Uma palavra não pode conter apenas números.'
+            )
+        return value
+
+    def validate_meaning(self, value):
+        
+        if value.isdigit():
+            raise serializers.ValidationError(
+                'O significado não pode conter apenas números.'
+            )
 
 
 class LoginSerializer(Serializer):

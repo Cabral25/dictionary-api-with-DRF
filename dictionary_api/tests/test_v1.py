@@ -201,7 +201,7 @@ class ListCreateWordTests(APITestCase):
         self.assertEqual(response.request['REQUEST_METHOD'], 'POST')
 
     
-    def test_invalid_data_type(self):
+    def test_create_word_with_invalid_data_type_word(self):
         user = User.objects.create_superuser(
             username='admin123',
             password='anypassword321',
@@ -211,12 +211,36 @@ class ListCreateWordTests(APITestCase):
         self.client.force_authenticate(user=user)
         data = {
             'word': 90909,
-            'meaning': 'framework'
+            'meaning': 'número'
         }
         response = self.client.post(reverse('words'), data=data)
         print(response.data)
+        print(response.request)
         print('status: ', response.status_code)
+        print('erro:', response.data['word'][0])
         self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.data['word'][0], 'Uma palavra não pode conter apenas números.')
+
+    
+    def test_create_word_with_invalid_data_type_meaning(self):
+        user = User.objects.create_superuser(
+            username='admin123',
+            password='anypassword321',
+            email='any@email.com'
+        )
+
+        self.client.force_authenticate(user=user)
+        data = {
+            'word': 'casa',
+            'meaning': 55555
+        }
+        response = self.client.post(reverse('words'), data=data)
+        print(response.data)
+        print(response.request)
+        print('status: ', response.status_code)
+        print('erro:', response.data['meaning'][0])
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.data['meaning'][0], 'O significado não pode conter apenas números.')
 
 
 
@@ -302,17 +326,47 @@ class SearchWordViewTests(APITestCase):
     
     def test_search_returns_matching_words(self):
 
-        Word.objects.create(
-            word='python',
-            meaning='...'
-        )
+        for i in range(5):
+            Word.objects.create(
+                word=f'casa{i}',
+                meaning=f'meaning{i}'
+            )
 
-        data = {'q': 'python'}
+        data = {'q': 'CASA'}
         response = self.client.get(reverse('search-word-v1'), data=data)
         print(response.data)
+        print(response.request)
+        print('query:', response.request['QUERY_STRING'])
         print(response.request['PATH_INFO'])
         print('status: ', response.status_code)
         self.assertEqual(response.status_code, 200)
+        self.assertEqual(len(response.data), 5)
+
+    
+    def test_search_returns_no_matching_words(self):
+
+        Word.objects.create(
+            word='casa',
+            meaning='...'
+        )
+
+        data = {'q': 'ruby'}
+        response = self.client.get(reverse('search-word-v1'), data=data)
+        print(response.data)
+        print(response.request)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(len(response.data), 0)
+
+    
+    def test_search_without_query_returns_empty_queryset(self):
+
+        response = self.client.get(reverse('search-word-v1'))
+        print(response.data)
+        print(response.request)
+        print('query string:', response.request['QUERY_STRING'])
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(len(response.data), 0)
+        self.assertEqual(response.request['QUERY_STRING'], '')
 
 
 

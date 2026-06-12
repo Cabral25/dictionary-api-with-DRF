@@ -68,8 +68,22 @@ class SearchWordView(ListAPIView):
 
 
 
-class UpdateWordView(RetrieveUpdateAPIView):
-    pass
+class UpdateWordView(RetrieveUpdateDestroyAPIView):
+    """
+        Permite visualizar e atualizar uma palavra.
+        Apenas administradores podem acessar essa view.
+    """
+    
+    queryset = Word.objects.all()
+    serializer_class = WordSerializerV1
+    lookup_field = 'word'
+
+    def get_permissions(self):
+        
+        if self.request.method == 'GET':
+            return [AllowAny()]
+        
+        return [IsAdminUser()]
 
 
 
