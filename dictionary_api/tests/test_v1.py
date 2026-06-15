@@ -371,7 +371,81 @@ class SearchWordViewTests(APITestCase):
 
 
 class UpdateWordViewTests(APITestCase):
-    pass
+    
+    def test_admin_can_update_word_partially(self):
+        admin = User.objects.create_superuser(
+            username='admin',
+            password='12345'
+        )
+        word = Word.objects.create(
+            word='palavra',
+            meaning='antigo significado',
+            created_by=admin
+        )
+
+        self.client.force_authenticate(user=admin)
+
+        response = self.client.patch(reverse('update-word-v1', kwargs={'word': 'palavra'}), {'meaning': 'novo significado'})
+        print(response.data)
+        print(response.request)
+        print('query string: ', response.request['QUERY_STRING'])
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data['meaning'], 'novo significado')
+        word.refresh_from_db()
+        self.assertEqual(word.meaning, 'novo significado')
+
+    
+    def test_admin_can_update_word_totally(self):
+        pass
+
+
+    def test_admin_update_word_invalid_type(self):
+        admin = User.objects.create_superuser(
+            username='admin',
+            password='12345'
+        )
+        word = Word.objects.create(
+            word='palavra',
+            meaning='antigo significado',
+            created_by=admin
+        )
+
+        self.client.force_authenticate(user=admin)
+
+        response = self.client.patch(reverse('update-word-v1', kwargs={'word': 'palavra'}), {'meaning': 56565})
+        print(response.data)
+        print(response.request)
+        print(response.status_code)
+        print('query string: ', response.request['QUERY_STRING'])
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.data['meaning'][0], 'O significado não pode conter apenas números.')
+        self.assertNotEqual(word.meaning, 56565)
+
+
+    def test_admin_update_word_missing_fields(self):
+        admin = User.objects.create_superuser(
+            username='admin',
+            password='12345'
+        )
+        word = Word.objects.create(
+            word='palavra',
+            meaning='antigo significado',
+            created_by=admin
+        )
+
+        self.client.force_authenticate(user=admin)
+
+        response = self.client.patch(reverse('update-word-v1', kwargs={'word': 'palavra'}))
+        print(response.data)
+        print(response.request)
+        print(response.status_code)
+        print('query string: ', response.request['QUERY_STRING'])
+        self.assertEqual(response.status_code, 400)
+
+
+    def test_non_authorized_user_cannot_update_word(self):
+        pass
+
 
 
 

@@ -38,6 +38,8 @@ class WordSerializerV1(ModelSerializer):
             raise serializers.ValidationError(
                 'O significado não pode conter apenas números.'
             )
+        
+        return value
 
 
 class LoginSerializer(Serializer):
