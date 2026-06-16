@@ -87,8 +87,20 @@ class UpdateWordView(RetrieveUpdateDestroyAPIView):
 
 
 
-class DeleteWordView(RetrieveDestroyAPIView):
-    pass
+class DeleteWordView(RetrieveUpdateDestroyAPIView):
+    """
+        Permite apagar uma palavra.
+        Apenas administradores podem apagar palavras.
+    """
+    
+    queryset = Word.objects.all()
+    serializer_class = WordSerializerV1
+    lookup_field = 'word'
+
+    def get_permissions(self):
+        if self.request.method == 'GET':
+            return [AllowAny()]
+        return [IsAdminUser()]
 
 
 

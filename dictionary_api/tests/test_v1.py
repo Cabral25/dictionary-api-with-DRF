@@ -259,8 +259,12 @@ class DetailWordViewTest(APITestCase):
 
     
     def test_get_inexistent_word(self):
+
         response = self.client.get(reverse('word-detail-v1', kwargs={'word': 'java'}))
+        print(response.data)
         self.assertEqual(response.status_code, 404)
+        self.assertEqual(response.data['detail'], 'No Word matches the given query.')
+        self.assertEqual(response.data['detail'].code, 'not_found')
 
     
     def test_anonymous_user_can_access_detail_view(self):
@@ -396,7 +400,28 @@ class UpdateWordViewTests(APITestCase):
 
     
     def test_admin_can_update_word_totally(self):
-        pass
+        admin = User.objects.create_superuser(
+            username='admin',
+            password='12345'
+        )
+        word = Word.objects.create(
+            word='palavra',
+            meaning='antigo significado',
+            created_by=admin
+        )
+
+        self.client.force_authenticate(user=admin)
+
+        response = self.client.put(reverse('update-word-v1', kwargs={'word': 'palavra'}), {'word': 'outra', 'meaning': 'novo significado'})
+        print(response.data)
+        print(response.request)
+        print('query string: ', response.request['QUERY_STRING'])
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data['word'], 'outra')
+        self.assertEqual(response.data['meaning'], 'novo significado')
+        word.refresh_from_db()
+        self.assertEqual(word.word, 'outra')
+        self.assertEqual(word.meaning, 'novo significado')
 
 
     def test_admin_update_word_invalid_type(self):
@@ -435,19 +460,90 @@ class UpdateWordViewTests(APITestCase):
 
         self.client.force_authenticate(user=admin)
 
-        response = self.client.patch(reverse('update-word-v1', kwargs={'word': 'palavra'}))
+        response = self.client.patch(reverse('update-word-v1', kwargs={'word': 'palavra'}), {'meaning': ''})
         print(response.data)
         print(response.request)
         print(response.status_code)
         print('query string: ', response.request['QUERY_STRING'])
         self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.data['meaning'][0], 'This field may not be blank.')
 
 
     def test_non_authorized_user_cannot_update_word(self):
-        pass
+        """admin = User.objects.create_superuser(
+            username='admin',
+            password='54321'
+        )"""
+        user = User.objects.create_user(
+            username='normal_user',
+            password='12345'
+        )
+        word = Word.objects.create(
+            word='word',
+            meaning='...'
+        )
 
+        self.client.force_authenticate(user=user)
+        response = self.client.patch(reverse('update-word-v1', kwargs={'word': 'word'}), {'meaning': 'nvovo significado'})
+        print(response.data)
+        print(response.request)
+        print(response.status_code)
+        print('detalhe:', response.data['detail'])
+        print('detalhe:', response.data['detail'].code)
+        self.assertEqual(response.status_code, 403)
+        self.assertEqual(response.data['detail'], 'You do not have permission to perform this action.')
+        self.assertEqual(response.data['detail'].code, 'permission_denied')
 
 
 
 class DeleteWordViewTests(APITestCase):
-    pass
+    
+    def test_admin_can_delete_word(self):
+        
+        admin = User.objects.create_superuser(
+            username='admin',
+            password='12345'
+        )
+        Word.objects.create(
+            word='word',
+            meaning='...',
+            created_by=admin
+        )
+
+        self.client.force_authenticate(user=admin)
+
+        response = self.client.delete(reverse('delete-word-v1', kwargs={'word': 'word'}))
+        print(response.data)
+        print(response.request)
+        print(response.status_code)
+        self.assertEqual(response.status_code, 204)
+        self.assertIsNone(response.data)
+        self.assertFalse(Word.objects.filter(word='word').exists())
+
+    
+    def test_non_admin_cannot_delete_word(self):
+        admin = User.objects.create_superuser(
+            username='admin',
+            password='12345'
+        )
+        user = User.objects.create_user(
+            username='user',
+            password='54321'
+        )
+
+        Word.objects.create(
+            word='word',
+            meaning='...',
+            created_by=admin
+        )
+
+        self.client.force_authenticate(user=user)
+
+        response = self.client.delete(reverse('delete-word-v1', kwargs={'word': 'word'}))
+        print(response.data)
+        print(response.request)
+        print(response.status_code)
+        self.assertEqual(response.status_code, 403)
+        self.assertEqual(response.data['detail'], 'You do not have permission to perform this action.')
+
+
