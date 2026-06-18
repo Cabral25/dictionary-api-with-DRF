@@ -2,14 +2,11 @@ from rest_framework.permissions import IsAdminUser, IsAuthenticated, AllowAny
 from rest_framework.views import APIView
 from rest_framework.generics import (
     ListCreateAPIView, 
-    RetrieveAPIView, 
-    RetrieveUpdateAPIView, 
-    RetrieveDestroyAPIView, 
+    RetrieveAPIView,
     RetrieveUpdateDestroyAPIView,
     ListAPIView
 )
 from rest_framework.response import Response
-from rest_framework.filters import SearchFilter
 from ..models import Word
 from .serializers import WordSerializerV1, LoginSerializer
 
@@ -50,6 +47,10 @@ class DetailWordView(RetrieveAPIView):
 
 
 class SearchWordView(ListAPIView):
+    """"
+        View que permite buscar uma palavra.
+        Qualquer um tem acesso.
+    """
     
     serializer_class = WordSerializerV1
     permission_classes = [AllowAny]
@@ -105,6 +106,10 @@ class DeleteWordView(RetrieveUpdateDestroyAPIView):
 
 
 class LoginView(APIView):
+    """
+        View básica para um usuário fazer login.
+        O acesso é livre para todos.
+    """
     
     permission_classes = [AllowAny]
 
@@ -138,6 +143,11 @@ class LoginView(APIView):
 
 
 class LogoutView(APIView):
+    """
+        View simples para realizar o logout.
+        O usuário precisa estar autenticado
+        e logado para acessar essa view.
+    """
     
     permission_classes = [IsAuthenticated]
 
