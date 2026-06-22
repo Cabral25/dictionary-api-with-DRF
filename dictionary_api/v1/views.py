@@ -1,20 +1,22 @@
-from rest_framework.permissions import IsAdminUser, IsAuthenticated, AllowAny
+from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.views import APIView
-from rest_framework.generics import (
-    ListCreateAPIView, 
-    RetrieveAPIView,
-    RetrieveUpdateDestroyAPIView,
-    ListAPIView
-)
 from rest_framework.response import Response
-from ..models import Word
+from rest_framework.authentication import SessionAuthentication
 from .serializers import WordSerializerV1, LoginSerializer
 
 from django.contrib.auth import authenticate, login, logout
 from rest_framework import status
 
+from ..views import (
+    BaseListWords,
+    BaseDetailWordView,
+    BaseSearchWordView,
+    BaseUpdateWordView,
+    BaseDeleteWordView
+)
 
-class ListWords(ListCreateAPIView):
+
+class ListWords(BaseListWords):
     """
         Endpoint que permite listar as palavras
         registradas e registrar novas. Usa a versão 
@@ -22,86 +24,46 @@ class ListWords(ListCreateAPIView):
         pode acessar essa rota, mas somente admins 
         podem criar objetos.
     """
-    queryset = Word.objects.all()
     serializer_class = WordSerializerV1
 
-    def get_permissions(self):
-        if self.request.method == 'GET':
-            return [AllowAny()]
-        return [IsAdminUser()]
 
 
-
-class DetailWordView(RetrieveAPIView):
+class DetailWordView(BaseDetailWordView):
     """
         Rota que permite mostrar em detalhes uma
         palavra registrada. Usa a versão 1 do
         serializador de palavras. Qualquer um pode
         acessar essa rota.
     """
-    queryset = Word.objects.all()
     serializer_class = WordSerializerV1
-    permission_classes = [AllowAny]
-    lookup_field = 'word'
 
 
 
-class SearchWordView(ListAPIView):
+class SearchWordView(BaseSearchWordView):
     """"
         View que permite buscar uma palavra.
         Qualquer um tem acesso.
     """
     
     serializer_class = WordSerializerV1
-    permission_classes = [AllowAny]
-
-    def get_queryset(self):
-
-        query = self.request.query_params.get('q')
-
-        if not query:
-            return Word.objects.none()
-        
-        # i = ignore case (encontra a palavra independente se ela estiver em maiúscula ou minúscula)
-        # contains = contém
-        # retorna a(s) palavra(s) que contém o valor de q em qualquer posição ({'q': 'casa'} retorna casa, casamento, etc)
-        return Word.objects.filter(word__icontains=query)
 
 
 
-class UpdateWordView(RetrieveUpdateDestroyAPIView):
+class UpdateWordView(BaseUpdateWordView):
     """
         Permite visualizar e atualizar uma palavra.
         Apenas administradores podem acessar essa view.
     """
-    
-    queryset = Word.objects.all()
     serializer_class = WordSerializerV1
-    lookup_field = 'word'
-
-    def get_permissions(self):
-        
-        if self.request.method == 'GET':
-            return [AllowAny()]
-        
-        return [IsAdminUser()]
 
 
 
-class DeleteWordView(RetrieveUpdateDestroyAPIView):
+class DeleteWordView(BaseDeleteWordView):
     """
         Permite apagar uma palavra.
         Apenas administradores podem apagar palavras.
     """
-    
-    queryset = Word.objects.all()
     serializer_class = WordSerializerV1
-    lookup_field = 'word'
-
-    def get_permissions(self):
-        if self.request.method == 'GET':
-            return [AllowAny()]
-        return [IsAdminUser()]
 
 
 

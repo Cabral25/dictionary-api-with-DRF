@@ -1,4 +1,5 @@
 from rest_framework.serializers import ModelSerializer
+from rest_framework import serializers
 from ..models import Word
 
 
@@ -22,3 +23,20 @@ class WordSerializerV2(ModelSerializer):
             'created_at',
             'updated_at'
         ]
+
+    def validate_word(self, value):
+
+        if value.isdigit():
+            raise serializers.ValidationError(
+                'Uma palavra não pode conter apenas números.'
+            )
+        return value
+
+    def validate_meaning(self, value):
+        
+        if value.isdigit():
+            raise serializers.ValidationError(
+                'O significado não pode conter apenas números.'
+            )
+        
+        return value

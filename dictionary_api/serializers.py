@@ -1,4 +1,6 @@
-from rest_framework.serializers import ModelSerializer
+from rest_framework.serializers import ModelSerializer, Serializer
+from rest_framework import serializers
+
 from .models import User, Word
 
 """
@@ -90,3 +92,8 @@ class WordSerializer(ModelSerializer):
             'created_at',
             'updated_at'
         ]
+
+
+class LoginSerializer(Serializer):
+    username = serializers.CharField()
+    password = serializers.CharField()
