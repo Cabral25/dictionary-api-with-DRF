@@ -39,8 +39,9 @@ class LoginViewTest(APITestCase):
             'password': '54321'
         }
         response = self.client.post(reverse('login-v1'), data=data)
-        self.assertEqual(response.status_code, 401)
-        self.assertEqual(response.data['error'], 'Credenciais inválidas')
+        self.assertEqual(response.status_code, 403)
+        self.assertEqual(response.data['detail'], 'Credenciais inválidas')
+        self.assertEqual(response.data['detail'].code, 'authentication_failed')
 
     
     def test_login_with_nonexistent_user(self):
@@ -50,8 +51,9 @@ class LoginViewTest(APITestCase):
             'password': '54321'
         }
         response = self.client.post(reverse('login-v1'), data=data)
-        self.assertEqual(response.status_code, 401)
-        self.assertEqual(response.data['error'], 'Credenciais inválidas')
+        self.assertEqual(response.status_code, 403)
+        self.assertEqual(response.data['detail'], 'Credenciais inválidas')
+        self.assertEqual(response.data['detail'].code, 'authentication_failed')
 
     
     def test_session_is_created_after_login(self):

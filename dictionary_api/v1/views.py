@@ -1,10 +1,11 @@
-from rest_framework.permissions import IsAuthenticated, AllowAny
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.authentication import SessionAuthentication
-from .serializers import WordSerializerV1, LoginSerializer
 
-from django.contrib.auth import authenticate, login, logout
+from .serializers import WordSerializerV1
+
+from django.contrib.auth import login, logout
 from rest_framework import status
 
 from ..views import (
@@ -12,7 +13,8 @@ from ..views import (
     BaseDetailWordView,
     BaseSearchWordView,
     BaseUpdateWordView,
-    BaseDeleteWordView
+    BaseDeleteWordView,
+    BaseLoginView
 )
 
 
@@ -25,6 +27,7 @@ class ListWords(BaseListWords):
         podem criar objetos.
     """
     serializer_class = WordSerializerV1
+    authentication_classes = [SessionAuthentication]
 
 
 
@@ -67,32 +70,16 @@ class DeleteWordView(BaseDeleteWordView):
 
 
 
-class LoginView(APIView):
+class LoginView(BaseLoginView):
     """
         View básica para um usuário fazer login.
         O acesso é livre para todos.
     """
-    
-    permission_classes = [AllowAny]
 
     def post(self, request):
 
-        serializer = LoginSerializer(data=request.data)
-
-        serializer.is_valid(raise_exception=True)
-
-        username = serializer.validated_data['username']
-        password = serializer.validated_data['password']
-
-        user = authenticate(request, username=username, password=password)
-
-        if user is None:
-            return Response(
-                {
-                    'error': 'Credenciais inválidas'
-                },
-                status=status.HTTP_401_UNAUTHORIZED
-            )
+        user = self.authenticate_user(request)
+        
         login(request, user)
 
         return Response(
