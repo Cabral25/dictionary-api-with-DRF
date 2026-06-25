@@ -1,11 +1,9 @@
 from rest_framework.permissions import IsAdminUser, IsAuthenticated, AllowAny
 from rest_framework.views import APIView
-from rest_framework.generics import ListCreateAPIView
 from rest_framework.response import Response
 from rest_framework.authtoken.models import Token
 from rest_framework.authentication import TokenAuthentication
-
-from ..models import Word
+from rest_framework import status
 
 from .serializers import WordSerializerV2
 
@@ -15,11 +13,12 @@ from ..views import (
     BaseSearchWordView,
     BaseUpdateWordView,
     BaseDeleteWordView,
-    BaseLoginView
+    BaseLoginView,
+    BaseAPIViewV2
 )
 
 
-class ListWordsv2(BaseListWords):
+class ListWordsv2(BaseAPIViewV2, BaseListWords):
     """
         Endpoint que permite listar as palavras
         registradas e registrar novas. Usa a versão 
@@ -27,8 +26,7 @@ class ListWordsv2(BaseListWords):
         pode acessar essa rota, mas somente admins 
         podem criar objetos.
     """
-    serializer_class = WordSerializerV2
-    authentication_classes = [TokenAuthentication]
+    pass
 
 
 class DetailWordViewV2(BaseDetailWordView):
@@ -39,7 +37,6 @@ class DetailWordViewV2(BaseDetailWordView):
         acessar essa rota.
     """
     serializer_class = WordSerializerV2
-    authentication_classes = []
 
 
 
@@ -49,19 +46,16 @@ class SearchWordViewV2(BaseSearchWordView):
         Qualquer um tem acesso.
     """
     serializer_class = WordSerializerV2
-    authentication_classes = []
 
 
 
-class UpdateWordViewV2(BaseUpdateWordView):
-    serializer_class = WordSerializerV2
-    authentication_classes = []
+class UpdateWordViewV2(BaseAPIViewV2, BaseUpdateWordView):
+    pass
 
 
 
-class DeleteWordViewV2(BaseDeleteWordView):
-    serializer_class = WordSerializerV2
-    authentication_classes = []
+class DeleteWordViewV2(BaseAPIViewV2, BaseDeleteWordView):
+    pass
 
 
 
@@ -82,4 +76,17 @@ class LoginViewV2(BaseLoginView):
 
 
 class LogoutViewV2(APIView):
-    pass
+    
+    authentication_classes = [TokenAuthentication]
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+
+        request.user.auth_token.delete()
+
+        return Response(
+            {
+                'message': 'Logout realizado com sucesso'
+            },
+            status=status.HTTP_200_OK
+        )

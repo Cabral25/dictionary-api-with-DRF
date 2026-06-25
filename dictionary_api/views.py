@@ -3,14 +3,17 @@ from rest_framework.generics import (
     RetrieveAPIView,
     ListAPIView,
     RetrieveUpdateDestroyAPIView,
+    GenericAPIView
 )
 from rest_framework.views import APIView
 from rest_framework.permissions import AllowAny, IsAdminUser
 from rest_framework.exceptions import AuthenticationFailed
+from rest_framework.authentication import TokenAuthentication
 
 from .models import Word
 
 from .serializers import LoginSerializer
+from dictionary_api.v2.serializers import WordSerializerV2
 
 from django.contrib.auth import authenticate
 
@@ -26,6 +29,11 @@ class BaseListWords(ListCreateAPIView):
         if self.request.method == 'GET':
             return [AllowAny()]
         return [IsAdminUser()]
+
+
+class BaseAPIViewV2(GenericAPIView):
+    serializer_class = WordSerializerV2
+    authentication_classes = [TokenAuthentication]
     
 
 class BaseDetailWordView(RetrieveAPIView):
@@ -97,6 +105,10 @@ class BaseLoginView(APIView):
             )
         
         return user
+
+
+class BaseLogoutView():
+    pass
 
 
 # Create your views here.
