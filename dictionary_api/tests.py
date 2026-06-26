@@ -30,7 +30,4 @@ class WordSerializerTest(TestCase):
     pass
 
 
-
-# Testes das views
-
 # Create your tests here.
