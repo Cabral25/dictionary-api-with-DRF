@@ -14,6 +14,11 @@ class WordSerializerV2(ModelSerializer):
         - criar palavras no banco de dados;
         - controlar quais campos serão expostos.
     """
+
+    created_by = serializers.CharField(
+        source='created_by.username',
+        read_only=True
+    )
     
     class Meta:
         model = Word

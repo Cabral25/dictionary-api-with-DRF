@@ -75,14 +75,17 @@ class TestListWordsView(APITestCase):
         data = {
             'word': 'django',
             'meaning': 'framework',
-            'created_by': admin
         }
         response = self.client.post(reverse('words-v2'), data=data)
+        word = Word.objects.first()
         print(admin)
         print('data:', response.data)
         print('request:', response.request)
+        print('criado por:', word.created_by)
+        print('id autor:', word.created_by_id)
         self.assertEqual(response.status_code, 201)
         self.assertEqual(Word.objects.count(), 1)
+        self.assertEqual(response.data['created_by'], 'cabral')
 
 
     def test_logged_user_cannot_create_word(self):

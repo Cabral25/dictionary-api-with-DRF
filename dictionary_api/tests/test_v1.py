@@ -153,6 +153,8 @@ class ListCreateWordTests(APITestCase):
             'meaning': 'framework'
         }
         response = self.client.post(reverse('words'), data=data)
+        word = Word.objects.first()
+        print('autor:', word.created_by)
         self.assertEqual(response.status_code, 201)
         self.assertEqual(Word.objects.count(), 1)
 

@@ -29,6 +29,9 @@ class BaseListWords(ListCreateAPIView):
         if self.request.method == 'GET':
             return [AllowAny()]
         return [IsAdminUser()]
+    
+    def perform_create(self, serializer):
+        serializer.save(created_by=self.request.user)
 
 
 class BaseAPIViewV2(GenericAPIView):
