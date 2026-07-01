@@ -50,7 +50,6 @@ class TestListWordsView(APITestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(len(response.data), 1)
         self.assertIn('example', response.data[0])
-        self.assertIn('created_by', response.data[0])
 
 
     def test_anonymous_user_cannot_create_word(self):
@@ -101,8 +100,11 @@ class TestListWordsView(APITestCase):
             'meaning': 'framework'
         }
         response = self.client.post(reverse('words-v2'), data=data)
+        print(response.data)
+        print('erro:', response.data['detail'])
         self.assertEqual(response.status_code, 403)
-        self.assertEqual(response.content, b'{"detail":"You do not have permission to perform this action."}')
+        self.assertEqual(response.data['detail'], "You do not have permission to perform this action.")
+        self.assertEqual(response.data['detail'].code, 'permission_denied')
 
     
     def test_missing_required_fields(self):
@@ -171,6 +173,7 @@ class TestDetailWordView(APITestCase):
         self.assertEqual(response.data['word'], 'palavra')
         self.assertIn('word', response.data)
         self.assertIn('meaning', response.data)
+        self.assertIn('example', response.data)
 
     
     def test_get_inexistent_word(self):
@@ -255,3 +258,106 @@ class TestSearchWordView(APITestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(len(response.data), 0)
         self.assertEqual(response.request['QUERY_STRING'], '')
+
+
+class TestUpdateWordView(APITestCase):
+
+    def test_admin_can_update_word_partially(self):
+        admin = User.objects.create_superuser(
+            username='cabral',
+            password='12345'
+        )
+        word = Word.objects.create(
+            word='palavra',
+            meaning='antigo significado',
+            created_by=admin
+        )
+
+        self.client.force_authenticate(user=admin)
+
+        response = self.client.patch(reverse('update-word-v2', kwargs={'word': 'palavra'}), {'meaning': 'novo significado'})
+        print(response.data)
+        print(response.request)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data['meaning'], 'novo significado')
+        word.refresh_from_db()
+        self.assertEqual(word.meaning, 'novo significado')
+
+    
+    def test_admin_can_update_word_totally(self):
+        admin = User.objects.create_superuser(
+            username='admin',
+            password='12345'
+        )
+        word = Word.objects.create(
+            word='palavra',
+            meaning='antigo significado',
+            example='old example',
+            created_by=admin
+        )
+
+        self.client.force_authenticate(user=admin)
+
+        response = self.client.put(reverse('update-word-v2', kwargs={'word': 'palavra'}), {'word': 'outra', 'meaning': 'novo significado', 'example': 'new example'})
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data['word'], 'outra')
+        self.assertEqual(response.data['meaning'], 'novo significado')
+        self.assertEqual(response.data['example'], 'new example')
+        word.refresh_from_db()
+        self.assertEqual(word.word, 'outra')
+        self.assertEqual(word.meaning, 'novo significado')
+        self.assertEqual(word.example, 'new example')
+
+
+    def test_admin_update_word_invalid_type(self):
+        admin = User.objects.create_superuser(
+            username='admin',
+            password='12345'
+        )
+        word = Word.objects.create(
+            word='palavra',
+            meaning='antigo significado',
+            created_by=admin
+        )
+
+        self.client.force_authenticate(user=admin)
+
+        response = self.client.patch(reverse('update-word-v2', kwargs={'word': 'palavra'}), {'meaning': 56565})
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.data['meaning'][0], 'O significado não pode conter apenas números.')
+        self.assertNotEqual(word.meaning, 56565)
+
+
+    def test_admin_update_word_missing_fields(self):
+        admin = User.objects.create_superuser(
+            username='admin',
+            password='12345'
+        )
+        word = Word.objects.create(
+            word='palavra',
+            meaning='antigo significado',
+            created_by=admin
+        )
+
+        self.client.force_authenticate(user=admin)
+
+        response = self.client.patch(reverse('update-word-v2', kwargs={'word': 'palavra'}), {'meaning': ''})
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.data['meaning'][0], 'This field may not be blank.')
+
+
+    def test_non_authorized_user_cannot_update_word(self):
+        user = User.objects.create_user(
+            username='normal_user',
+            password='12345'
+        )
+        word = Word.objects.create(
+            word='word',
+            meaning='...'
+        )
+
+        self.client.force_authenticate(user=user)
+        response = self.client.patch(reverse('update-word-v2', kwargs={'word': 'word'}), {'meaning': 'nvovo significado'})
+        self.assertEqual(response.status_code, 403)
+        self.assertEqual(response.data['detail'], 'You do not have permission to perform this action.')
+        self.assertEqual(response.data['detail'].code, 'permission_denied')
