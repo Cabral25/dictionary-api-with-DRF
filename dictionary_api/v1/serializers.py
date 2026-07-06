@@ -43,5 +43,8 @@ class WordSerializerV1(ModelSerializer):
 
 
 class LoginSerializer(Serializer):
+    """"
+        Serializador do login.
+    """
     username = serializers.CharField()
     password = serializers.CharField()

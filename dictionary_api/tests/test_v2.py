@@ -27,7 +27,53 @@ class TestLoginViewV2(APITestCase):
         print(response.request)
         print('status:', response.status_code)
         self.assertEqual(response.status_code, 200)
+        self.assertIn('token', response.data)
         # self.assertEqual(response.data['message'], 'Login realizado com sucesso')
+
+    
+    def test_login_invalid_credentials_wrong_username(self):
+
+        User.objects.create_user(
+            username='nome',
+            password='12356'
+        )
+
+        data = {
+            'username': 'outro-nome',
+            'password': '123456'
+        }
+        response = self.client.post(reverse('login-v2'), data=data)
+        print(response.data)
+        print(response.request)
+        print('status:', response.status_code)
+        self.assertEqual(response.status_code, 403)
+        self.assertEqual(response.data['detail'], 'Credenciais inválidas')
+        self.assertEqual(response.data['detail'].code, 'authentication_failed')
+
+    
+    def test_login_invalid_credentials_wrong_password(self):
+
+        User.objects.create_user(
+            username='nome',
+            password='12356'
+        )
+
+        data = {
+            'username': 'outro-nome',
+            'password': 'abcde'
+        }
+        response = self.client.post(reverse('login-v2'), data=data)
+        print(response.data)
+        print(response.request)
+        print('status:', response.status_code)
+        self.assertEqual(response.status_code, 403)
+        self.assertEqual(response.data['detail'], 'Credenciais inválidas')
+        self.assertEqual(response.data['detail'].code, 'authentication_failed')
+
+    
+    def test_login_with_nonexistent_user(self):
+        pass
+
 
     
 class TestLogoutViewV2(APITestCase):
@@ -258,6 +304,7 @@ class TestSearchWordView(APITestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(len(response.data), 0)
         self.assertEqual(response.request['QUERY_STRING'], '')
+
 
 
 class TestUpdateWordView(APITestCase):
