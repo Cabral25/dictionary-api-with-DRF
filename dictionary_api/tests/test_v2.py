@@ -1,4 +1,5 @@
 from rest_framework.test import APITestCase
+from rest_framework.authtoken.models import Token
 from django.urls import reverse
 from django.contrib.auth import get_user_model
 
@@ -72,12 +73,96 @@ class TestLoginViewV2(APITestCase):
 
     
     def test_login_with_nonexistent_user(self):
-        pass
+        
+        data = {
+            'username': 'outro-nome',
+            'password': 'abcde'
+        }
+        response = self.client.post(reverse('login-v2'), data=data)
+        print(response.data)
+        print(response.request)
+        print(response.status_code)
+        self.assertEqual(response.status_code, 403)
+
+    
+    def test_login_without_username(self):
+
+        data = {
+            'password': 'abcde'
+        }
+        response = self.client.post(reverse('login-v2'), data=data)
+        print(response.data)
+        print(response.status_code)
+        self.assertEqual(response.status_code, 400)
+        self.assertIn('username', response.data)
+        self.assertEqual(response.data['username'][0], 'This field is required.')
+
+
+    
+    def test_login_without_password(self):
+
+        data = {
+            'username': 'outro-nome'
+        }
+        response = self.client.post(reverse('login-v2'), data=data)
+        print(response.data)
+        print(response.status_code)
+        self.assertEqual(response.status_code, 400)
+        self.assertIn('password', response.data)
+        self.assertEqual(response.data['password'][0], 'This field is required.')
+
+    
+    def test_token_is_created(self):
+        user = User.objects.create_user(
+            username='nome',
+            email='okokokoko',
+            password='12345'
+        )
+        data = {
+            'username': 'nome',
+            'password': '12345'
+        }
+        self.client.post(reverse('login-v2'), data=data)
+        self.assertTrue(Token.objects.filter(user=user).exists())
+
+    
+    def test_multiple_logins_use_same_token(self):
+        user = User.objects.create_user(
+            username='nome',
+            email='blblbl',
+            password='12345'
+        )
+
+        data = {
+            'username': 'nome',
+            'password': '12345'
+        }
+        response1 = self.client.post(reverse('login-v2'), data=data)
+        response2 = self.client.post(reverse('login-v2'), data=data)
+
+        self.assertEqual(response1.data['token'], response2.data['token'])
+        self.assertEqual(Token.objects.filter(user=user).count(), 1)
 
 
     
 class TestLogoutViewV2(APITestCase):
-    pass
+    
+    def test_logout_success(self):
+        
+        user = User.objects.create_user(
+            username='nome',
+            password='12345'
+        )
+
+        token = Token.objects.create(user=user)
+        self.client.credentials(HTTP_AUTHORIZATION=f'Token {token.key}')
+
+        response = self.client.post(reverse('logout-v2'))
+        print(response.data)
+        print(response.status_code)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data['message'], 'Logout realizado com sucesso')
+        self.assertFalse(Token.objects.filter(user=user).exists())
 
 
 
