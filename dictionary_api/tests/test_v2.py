@@ -4,7 +4,6 @@ from django.urls import reverse
 from django.contrib.auth import get_user_model
 
 from dictionary_api.models import Word
-from dictionary_api.v1.serializers import LoginSerializer
 
 User = get_user_model()
 
@@ -24,9 +23,6 @@ class TestLoginViewV2(APITestCase):
         }
         
         response = self.client.post(reverse('login-v2'), data=data)
-        print(response.data)
-        print(response.request)
-        print('status:', response.status_code)
         self.assertEqual(response.status_code, 200)
         self.assertIn('token', response.data)
         # self.assertEqual(response.data['message'], 'Login realizado com sucesso')
@@ -44,9 +40,6 @@ class TestLoginViewV2(APITestCase):
             'password': '123456'
         }
         response = self.client.post(reverse('login-v2'), data=data)
-        print(response.data)
-        print(response.request)
-        print('status:', response.status_code)
         self.assertEqual(response.status_code, 403)
         self.assertEqual(response.data['detail'], 'Credenciais inválidas')
         self.assertEqual(response.data['detail'].code, 'authentication_failed')
@@ -64,9 +57,6 @@ class TestLoginViewV2(APITestCase):
             'password': 'abcde'
         }
         response = self.client.post(reverse('login-v2'), data=data)
-        print(response.data)
-        print(response.request)
-        print('status:', response.status_code)
         self.assertEqual(response.status_code, 403)
         self.assertEqual(response.data['detail'], 'Credenciais inválidas')
         self.assertEqual(response.data['detail'].code, 'authentication_failed')
@@ -79,9 +69,6 @@ class TestLoginViewV2(APITestCase):
             'password': 'abcde'
         }
         response = self.client.post(reverse('login-v2'), data=data)
-        print(response.data)
-        print(response.request)
-        print(response.status_code)
         self.assertEqual(response.status_code, 403)
 
     
@@ -91,8 +78,6 @@ class TestLoginViewV2(APITestCase):
             'password': 'abcde'
         }
         response = self.client.post(reverse('login-v2'), data=data)
-        print(response.data)
-        print(response.status_code)
         self.assertEqual(response.status_code, 400)
         self.assertIn('username', response.data)
         self.assertEqual(response.data['username'][0], 'This field is required.')
@@ -105,8 +90,6 @@ class TestLoginViewV2(APITestCase):
             'username': 'outro-nome'
         }
         response = self.client.post(reverse('login-v2'), data=data)
-        print(response.data)
-        print(response.status_code)
         self.assertEqual(response.status_code, 400)
         self.assertIn('password', response.data)
         self.assertEqual(response.data['password'][0], 'This field is required.')
@@ -139,7 +122,6 @@ class TestLoginViewV2(APITestCase):
         }
         response1 = self.client.post(reverse('login-v2'), data=data)
         response2 = self.client.post(reverse('login-v2'), data=data)
-
         self.assertEqual(response1.data['token'], response2.data['token'])
         self.assertEqual(Token.objects.filter(user=user).count(), 1)
 
@@ -158,11 +140,39 @@ class TestLogoutViewV2(APITestCase):
         self.client.credentials(HTTP_AUTHORIZATION=f'Token {token.key}')
 
         response = self.client.post(reverse('logout-v2'))
-        print(response.data)
-        print(response.status_code)
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.data['message'], 'Logout realizado com sucesso')
         self.assertFalse(Token.objects.filter(user=user).exists())
+
+    
+    def test_unauthenticated_user_cannot_logout(self):
+        response = self.client.post(reverse('logout-v2'))
+        self.assertEqual(response.status_code, 401)
+        self.assertEqual(response.data['detail'], 'Authentication credentials were not provided.')
+
+    
+    def test_logout_with_invalid_token(self):
+        self.client.credentials(HTTP_AUTHORIZATION='Token token_inexistente')
+        response = self.client.post(reverse('logout-v2'))
+        self.assertEqual(response.status_code, 401)
+        self.assertEqual(response.data['detail'], 'Invalid token.')
+        self.assertEqual(response.data['detail'].code, 'authentication_failed')
+
+    
+    def test_cannot_use_deleted_token(self):
+        user = User.objects.create_user(
+            username='nome',
+            password='12345'
+        )
+
+        token = Token.objects.create(user=user)
+        self.client.credentials(HTTP_AUTHORIZATION=f'Token {token.key}')
+
+        self.client.post(reverse('logout-v2'))
+        response = self.client.post(reverse('logout-v2'))
+        response = self.client.post(reverse('logout-v2'))
+        self.assertEqual(response.status_code, 401)
+        self.assertEqual(response.data['detail'], 'Invalid token.')
 
 
 
@@ -176,8 +186,6 @@ class TestListWordsView(APITestCase):
         )
 
         response = self.client.get(reverse('words-v2'))
-        print('data:', response.data)
-        print('request:', response.request)
         self.assertEqual(response.status_code, 200)
         self.assertEqual(len(response.data), 1)
         self.assertIn('example', response.data[0])
@@ -208,11 +216,6 @@ class TestListWordsView(APITestCase):
         }
         response = self.client.post(reverse('words-v2'), data=data)
         word = Word.objects.first()
-        print(admin)
-        print('data:', response.data)
-        print('request:', response.request)
-        print('criado por:', word.created_by)
-        print('id autor:', word.created_by_id)
         self.assertEqual(response.status_code, 201)
         self.assertEqual(Word.objects.count(), 1)
         self.assertEqual(response.data['created_by'], 'cabral')
@@ -231,8 +234,6 @@ class TestListWordsView(APITestCase):
             'meaning': 'framework'
         }
         response = self.client.post(reverse('words-v2'), data=data)
-        print(response.data)
-        print('erro:', response.data['detail'])
         self.assertEqual(response.status_code, 403)
         self.assertEqual(response.data['detail'], "You do not have permission to perform this action.")
         self.assertEqual(response.data['detail'].code, 'permission_denied')
@@ -408,8 +409,6 @@ class TestUpdateWordView(APITestCase):
         self.client.force_authenticate(user=admin)
 
         response = self.client.patch(reverse('update-word-v2', kwargs={'word': 'palavra'}), {'meaning': 'novo significado'})
-        print(response.data)
-        print(response.request)
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.data['meaning'], 'novo significado')
         word.refresh_from_db()
@@ -513,8 +512,6 @@ class TestDeleteWordView(APITestCase):
         self.client.force_authenticate(user=admin)
 
         response = self.client.delete(reverse('delete-word-v2', kwargs={'word': 'word'}))
-        print(response.data)
-        print(response.request)
         self.assertEqual(response.status_code, 204)
         self.assertIsNone(response.data)
         self.assertFalse(Word.objects.filter(word='word').exists())
@@ -535,8 +532,6 @@ class TestDeleteWordView(APITestCase):
         self.client.force_authenticate(user=admin)
 
         response = self.client.delete(reverse('delete-word-v2', kwargs={'word': 'nada'}))
-        print(response.data)
-        print(response.request)
         self.assertEqual(response.status_code, 404)
         self.assertTrue(Word.objects.filter(word='word').exists())
         self.assertEqual(response.data['detail'], 'No Word matches the given query.')
