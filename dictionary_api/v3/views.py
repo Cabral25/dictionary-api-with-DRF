@@ -16,13 +16,13 @@ from ..views import (
     BaseSearchWordView,
     BaseUpdateWordView,
     BaseDeleteWordView,
-    BaseLoginView
+    BaseLoginView,
+    BaseAPIViewV3
 )
 
 
-class ListWordsV3(BaseListWords):
-    serializer_class = WordSerializerV3
-    authentication_classes = [JWTAuthentication]
+class ListWordsV3(BaseAPIViewV3, BaseListWords):
+    pass
 
 
 

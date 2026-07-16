@@ -215,7 +215,6 @@ class TestListWordsView(APITestCase):
             'meaning': 'framework',
         }
         response = self.client.post(reverse('words-v2'), data=data)
-        word = Word.objects.first()
         self.assertEqual(response.status_code, 201)
         self.assertEqual(Word.objects.count(), 1)
         self.assertEqual(response.data['created_by'], 'cabral')

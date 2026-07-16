@@ -14,6 +14,9 @@ from .models import Word
 
 from .serializers import LoginSerializer
 from dictionary_api.v2.serializers import WordSerializerV2
+from dictionary_api.v3.serializers import WordSerializerV3
+
+from rest_framework_simplejwt.authentication import JWTAuthentication
 
 from django.contrib.auth import authenticate
 
@@ -37,6 +40,11 @@ class BaseListWords(ListCreateAPIView):
 class BaseAPIViewV2(GenericAPIView):
     serializer_class = WordSerializerV2
     authentication_classes = [TokenAuthentication]
+
+
+class BaseAPIViewV3(GenericAPIView):
+    serializer_class = WordSerializerV3
+    authentication_classes = [JWTAuthentication]
     
 
 class BaseDetailWordView(RetrieveAPIView):
