@@ -118,8 +118,4 @@ class BaseLoginView(APIView):
         return user
 
 
-class BaseLogoutView():
-    pass
-
-
 # Create your views here.

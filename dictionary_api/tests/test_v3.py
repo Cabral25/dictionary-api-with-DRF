@@ -9,6 +9,11 @@ User = get_user_model()
 
 
 
+class TestLoginViewV3(APITestCase):
+    pass
+
+
+
 class TestListWordsV3(APITestCase):
 
     def test_anyone_can_access_words(self):
@@ -48,7 +53,7 @@ class TestListWordsV3(APITestCase):
             'word': 'django',
             'meaning': 'framework',
         }
-        response = self.client.post(reverse('words-v2'), data=data)
+        response = self.client.post(reverse('list-words-v3'), data=data)
         self.assertEqual(response.status_code, 201)
         self.assertEqual(Word.objects.count(), 1)
         self.assertEqual(response.data['created_by'], 'cabral')
@@ -66,7 +71,7 @@ class TestListWordsV3(APITestCase):
             'word': 'django',
             'meaning': 'framework'
         }
-        response = self.client.post(reverse('words-v2'), data=data)
+        response = self.client.post(reverse('list-words-v3'), data=data)
         self.assertEqual(response.status_code, 403)
         self.assertEqual(response.data['detail'], "You do not have permission to perform this action.")
         self.assertEqual(response.data['detail'].code, 'permission_denied')
@@ -84,10 +89,10 @@ class TestListWordsV3(APITestCase):
         data = {
             'word': 'django',
         }
-        response = self.client.post(reverse('words-v2'), data=data)
+        response = self.client.post(reverse('list-words-v3'), data=data)
         self.assertEqual(response.status_code, 400)
         self.assertEqual(response.data['meaning'][0], 'This field is required.')
-        self.assertEqual(response.request['PATH_INFO'], '/api/v2/words/')
+        self.assertEqual(response.request['PATH_INFO'], '/api/v3/words/')
         self.assertEqual(response.request['REQUEST_METHOD'], 'POST')
 
     
@@ -103,7 +108,7 @@ class TestListWordsV3(APITestCase):
             'word': 90909,
             'meaning': 'número'
         }
-        response = self.client.post(reverse('words-v2'), data=data)
+        response = self.client.post(reverse('list-words-v3'), data=data)
         self.assertEqual(response.status_code, 400)
         self.assertEqual(response.data['word'][0], 'Uma palavra não pode conter apenas números.')
 
@@ -120,6 +125,268 @@ class TestListWordsV3(APITestCase):
             'word': 'casa',
             'meaning': 55555
         }
-        response = self.client.post(reverse('words-v2'), data=data)
+        response = self.client.post(reverse('list-words-v3'), data=data)
         self.assertEqual(response.status_code, 400)
         self.assertEqual(response.data['meaning'][0], 'O significado não pode conter apenas números.')
+
+
+
+class TestDetailWordView(APITestCase):
+    
+    def test_any_user_can_get_existing_word_success(self):
+        word = Word.objects.create(
+            word='palavra',
+            meaning='menor unidade de uma língua'
+        )
+        response = self.client.get(reverse('word-detail-v3', kwargs={'word': 'palavra'}))
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data['word'], 'palavra')
+
+    
+    def test_get_inexistent_word(self):
+
+        response = self.client.get(reverse('word-detail-v3', kwargs={'word': 'java'}))
+        self.assertEqual(response.status_code, 404)
+        self.assertEqual(response.data['detail'], 'No Word matches the given query.')
+        self.assertEqual(response.data['detail'].code, 'not_found')
+
+    
+    def test_lookup_is_performed_using_word_field(self):
+
+        Word.objects.create(
+            word='palavra',
+            meaning='any meaning'
+        )
+
+        response = self.client.get(reverse('word-detail-v3', kwargs={'word': 'palavra'}))
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data['word'], 'palavra')
+
+    
+    def test_response_contains_expected_fields(self):
+        admin = User.objects.create_user(
+            username='admin',
+            password='12345'
+        )
+
+        Word.objects.create(
+            word='python',
+            meaning='Linguagem',
+            created_by=admin
+        )
+
+        response = self.client.get(reverse('word-detail-v3', kwargs={'word': 'python'}))
+        print(response.data)
+        self.assertIn('word', response.data)
+        self.assertIn('meaning', response.data)
+        self.assertIn('example', response.data)
+        self.assertIn('created_by', response.data)
+        self.assertIn('created_at', response.data)
+        self.assertIn('updated_at', response.data)
+
+
+
+class TestSearchWordView(APITestCase):
+
+    def test_search_returns_matching_words(self):
+
+        for i in range(5):
+            Word.objects.create(
+                word=f'casa{i}',
+                meaning=f'meaning{i}'
+            )
+
+        data = {'q': 'CASA'}
+        response = self.client.get(reverse('search-word-v3'), data=data)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(len(response.data), 5)
+
+    
+    def test_search_returns_no_matching_words(self):
+
+        Word.objects.create(
+            word='casa',
+            meaning='...'
+        )
+
+        data = {'q': 'ruby'}
+        response = self.client.get(reverse('search-word-v3'), data=data)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(len(response.data), 0)
+
+    
+    def test_search_without_query_returns_empty_queryset(self):
+
+        response = self.client.get(reverse('search-word-v3'))
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(len(response.data), 0)
+        self.assertEqual(response.request['QUERY_STRING'], '')
+
+
+
+class TestUpdateWordView(APITestCase):
+
+    def test_admin_can_update_word_partially(self):
+        admin = User.objects.create_superuser(
+            username='cabral',
+            password='12345'
+        )
+        word = Word.objects.create(
+            word='palavra',
+            meaning='antigo significado',
+            created_by=admin
+        )
+
+        self.client.force_authenticate(user=admin)
+
+        response = self.client.patch(reverse('update-word-v3', kwargs={'word': 'palavra'}), {'meaning': 'novo significado'})
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data['meaning'], 'novo significado')
+        word.refresh_from_db()
+        self.assertEqual(word.meaning, 'novo significado')
+
+    
+    def test_admin_can_update_word_totally(self):
+        admin = User.objects.create_superuser(
+            username='admin',
+            password='12345'
+        )
+        word = Word.objects.create(
+            word='palavra',
+            meaning='antigo significado',
+            example='old example',
+            created_by=admin
+        )
+
+        self.client.force_authenticate(user=admin)
+
+        response = self.client.put(reverse('update-word-v3', kwargs={'word': 'palavra'}), {'word': 'outra', 'meaning': 'novo significado', 'example': 'new example'})
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data['word'], 'outra')
+        self.assertEqual(response.data['meaning'], 'novo significado')
+        self.assertEqual(response.data['example'], 'new example')
+        word.refresh_from_db()
+        self.assertEqual(word.word, 'outra')
+        self.assertEqual(word.meaning, 'novo significado')
+        self.assertEqual(word.example, 'new example')
+
+
+    def test_admin_update_word_invalid_type(self):
+        admin = User.objects.create_superuser(
+            username='admin',
+            password='12345'
+        )
+        word = Word.objects.create(
+            word='palavra',
+            meaning='antigo significado',
+            created_by=admin
+        )
+
+        self.client.force_authenticate(user=admin)
+
+        response = self.client.patch(reverse('update-word-v3', kwargs={'word': 'palavra'}), {'meaning': 56565})
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.data['meaning'][0], 'O significado não pode conter apenas números.')
+        self.assertNotEqual(word.meaning, 56565)
+
+
+    def test_admin_update_word_missing_fields(self):
+        admin = User.objects.create_superuser(
+            username='admin',
+            password='12345'
+        )
+        word = Word.objects.create(
+            word='palavra',
+            meaning='antigo significado',
+            created_by=admin
+        )
+
+        self.client.force_authenticate(user=admin)
+
+        response = self.client.patch(reverse('update-word-v3', kwargs={'word': 'palavra'}), {'meaning': ''})
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.data['meaning'][0], 'This field may not be blank.')
+
+
+    def test_non_authorized_user_cannot_update_word(self):
+        user = User.objects.create_user(
+            username='normal_user',
+            password='12345'
+        )
+        word = Word.objects.create(
+            word='word',
+            meaning='...'
+        )
+
+        self.client.force_authenticate(user=user)
+        response = self.client.patch(reverse('update-word-v3', kwargs={'word': 'word'}), {'meaning': 'nvovo significado'})
+        self.assertEqual(response.status_code, 403)
+        self.assertEqual(response.data['detail'], 'You do not have permission to perform this action.')
+        self.assertEqual(response.data['detail'].code, 'permission_denied')
+
+
+
+class TestDeleteWordView(APITestCase):
+
+    def test_admin_can_delete_word(self):
+        
+        admin = User.objects.create_superuser(
+            username='admin',
+            password='12345'
+        )
+        Word.objects.create(
+            word='word',
+            meaning='...',
+            created_by=admin
+        )
+
+        self.client.force_authenticate(user=admin)
+
+        response = self.client.delete(reverse('delete-word-v3', kwargs={'word': 'word'}))
+        self.assertEqual(response.status_code, 204)
+        self.assertIsNone(response.data)
+        self.assertFalse(Word.objects.filter(word='word').exists())
+
+    
+    def test_delete_word_not_found(self):
+
+        admin = User.objects.create_superuser(
+            username='admin',
+            password='12345'
+        )
+        Word.objects.create(
+            word='word',
+            meaning='...',
+            created_by=admin
+        )
+
+        self.client.force_authenticate(user=admin)
+
+        response = self.client.delete(reverse('delete-word-v3', kwargs={'word': 'nada'}))
+        self.assertEqual(response.status_code, 404)
+        self.assertTrue(Word.objects.filter(word='word').exists())
+        self.assertEqual(response.data['detail'], 'No Word matches the given query.')
+        self.assertEqual(response.data['detail'].code, 'not_found')
+
+    
+    def test_non_admin_cannot_delete_word(self):
+        admin = User.objects.create_superuser(
+            username='admin',
+            password='12345'
+        )
+        user = User.objects.create_user(
+            username='user',
+            password='54321'
+        )
+
+        Word.objects.create(
+            word='word',
+            meaning='...',
+            created_by=admin
+        )
+
+        self.client.force_authenticate(user=user)
+
+        response = self.client.delete(reverse('delete-word-v3', kwargs={'word': 'word'}))
+        self.assertEqual(response.status_code, 403)
+        self.assertEqual(response.data['detail'], 'You do not have permission to perform this action.')

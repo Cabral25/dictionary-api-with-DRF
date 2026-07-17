@@ -1,12 +1,8 @@
-from rest_framework.permissions import IsAdminUser, IsAuthenticated, AllowAny
-from rest_framework.views import APIView
-from rest_framework import status
-from rest_framework.generics import ListCreateAPIView
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
-from rest_framework_simplejwt.authentication import JWTAuthentication
-
-from ..models import Word
+from rest_framework.permissions import IsAuthenticated
+from rest_framework import status
+from rest_framework.views import APIView
 
 from .serializers import WordSerializerV3
 
@@ -28,25 +24,21 @@ class ListWordsV3(BaseAPIViewV3, BaseListWords):
 
 class DetailWordViewV3(BaseDetailWordView):
     serializer_class = WordSerializerV3
-    authentication_classes = []
 
 
 
 class SearchWordViewV3(BaseSearchWordView):
     serializer_class = WordSerializerV3
-    authentication_classes = []
 
 
 
-class UpdateWordViewV3(BaseUpdateWordView):
-    serializer_class = WordSerializerV3
-    authentication_classes = []
+class UpdateWordViewV3(BaseAPIViewV3, BaseUpdateWordView):
+    pass
 
 
 
-class DeleteWordViewV3(BaseDeleteWordView):
-    serializer_class = WordSerializerV3
-    authentication_classes = []
+class DeleteWordViewV3(BaseAPIViewV3, BaseDeleteWordView):
+    pass
 
 
 class LoginViewV3(BaseLoginView):
@@ -63,3 +55,28 @@ class LoginViewV3(BaseLoginView):
                 'access': str(refresh.access_token)
             }
         )
+
+
+class LogoutViewV3(APIView):
+    
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        refresh_token = request.data.get('refresh')
+
+        try:
+            token = RefreshToken(refresh_token)
+            token.blacklist()
+            return Response(
+                {
+                    'message': 'Logout realizado com sucesso.'
+                },
+                status=status.HTTP_200_OK
+            )
+        except Exception:
+            return Response(
+                {
+                    'error': 'Refresh token inválido.'
+                },
+                status=status.HTTP_400_BAD_REQUEST
+            )
