@@ -1,4 +1,6 @@
 from rest_framework.test import APITestCase
+from rest_framework_simplejwt.tokens import RefreshToken, AccessToken
+
 from django.urls import reverse
 from django.contrib.auth import get_user_model
 
@@ -10,6 +12,107 @@ User = get_user_model()
 
 
 class TestLoginViewV3(APITestCase):
+    
+    def test_login_returns_access_and_refresh_tokens(self):
+
+        User.objects.create_user(
+            username='admin',
+            password='12345'
+        )
+
+        data = {
+            'username': 'admin',
+            'password': '12345'
+        }
+        response = self.client.post(reverse('login-v3'), data=data)
+        print(response.data)
+        self.assertEqual(response.status_code, 200)
+        self.assertIn('refresh', response.data)
+        self.assertIn('access', response.data)
+
+    
+    def test_login_returns_valid_jwt_tokens(self):
+
+        User.objects.create_user(
+            username='admin',
+            password='12345'
+        )
+
+        data = {
+            'username': 'admin',
+            'password': '12345'
+        }
+        response = self.client.post(reverse('login-v3'), data=data)
+        access_token = AccessToken(response.data['access'])
+        refresh_token = RefreshToken(response.data['refresh'])
+        print(response.data)
+        self.assertIsNotNone(access_token)
+        self.assertIsNotNone(refresh_token)
+
+    
+    def test_login_with_wrong_password(self):
+
+        User.objects.create_user(
+            username='admin',
+            password='12345'
+        )
+
+        data = {
+            'username': 'admin',
+            'password': 'senha_errada'
+        }
+        response = self.client.post(reverse('login-v3'), data=data)
+        print(response.data)
+        self.assertEqual(response.status_code, 403)
+        self.assertEqual(response.data['detail'], 'Credenciais inválidas')
+
+    
+    def test_login_without_username(self):
+
+        data = {
+            'password': '12345'
+        }
+        response = self.client.post(reverse('login-v3'), data=data)
+        print(response.data)
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.data['username'][0], 'This field is required.')
+
+    
+    def test_login_without_password(self):
+
+        data = {
+            'username': 'admin',
+        }
+        response = self.client.post(reverse('login-v3'), data=data)
+        print(response.data)
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.data['password'][0], 'This field is required.')
+
+    
+    def test_tokens_belong_to_correct_user(self):
+
+        user = User.objects.create_user(
+            username='admin',
+            password='12345'
+        )
+
+        data = {
+            'username': 'admin',
+            'password': '12345'
+        }
+        response = self.client.post(reverse('login-v3'), data=data)
+        access_token = AccessToken(response.data['access'])
+        print(response.data)
+        self.assertEqual(int(access_token['user_id']), user.id)
+
+
+
+class TestLogoutViewV3(APITestCase):
+    pass
+
+
+
+class TestRefreshView(APITestCase):
     pass
 
 

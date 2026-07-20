@@ -25,7 +25,6 @@ class TestLoginViewV2(APITestCase):
         response = self.client.post(reverse('login-v2'), data=data)
         self.assertEqual(response.status_code, 200)
         self.assertIn('token', response.data)
-        # self.assertEqual(response.data['message'], 'Login realizado com sucesso')
 
     
     def test_login_invalid_credentials_wrong_username(self):

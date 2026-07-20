@@ -1,8 +1,9 @@
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework import status
 from rest_framework.views import APIView
+from rest_framework_simplejwt.exceptions import TokenError
 
 from .serializers import WordSerializerV3
 
@@ -79,4 +80,28 @@ class LogoutViewV3(APIView):
                     'error': 'Refresh token inválido.'
                 },
                 status=status.HTTP_400_BAD_REQUEST
+            )
+
+
+
+class RefreshView(APIView):
+
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        refresh = request.data.get('refresh')
+
+        try:
+            token = RefreshToken(refresh)
+            return Response(
+                {
+                    'access': str(token.access_token)
+                }
+            )
+        except TokenError:
+            return Response(
+                {
+                    'error': 'Refresh token inválido.'
+                },
+                status=status.HTTP_401_UNAUTHORIZED
             )
