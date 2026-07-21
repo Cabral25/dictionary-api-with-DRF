@@ -105,10 +105,50 @@ class TestLoginViewV3(APITestCase):
         print(response.data)
         self.assertEqual(int(access_token['user_id']), user.id)
 
+    
+    def test_access_token_can_authenticate_user(self):
+
+        user = User.objects.create_user(
+            username='admin',
+            password='12345'
+        )
+
+        data = {
+            'username': 'admin',
+            'password': '12345'
+        }
+        login_response = self.client.post(reverse('login-v3'), data=data)
+        access_token = login_response.data['access']
+        self.client.credentials(
+            HTTP_AUTHORIZATION=f'Bearer {access_token}'
+        )
+        response = self.client.get(reverse('list-words-v3'))
+        print(response.data)
+        self.assertEqual(response.status_code, 200)
+
 
 
 class TestLogoutViewV3(APITestCase):
-    pass
+    
+    def test_autheticated_user_can_logout(self):
+
+        user = User.objects.create_user(
+            username='admin',
+            password='12345'
+        )
+        
+        self.client.force_authenticate(user=user)
+        refresh = RefreshToken.for_user(user)
+        self.client.credentials(
+            HTTP_AUTHORIZATION=f'Bearer {str(refresh.access_token)}'
+        )
+
+        data = {
+            'refresh': str(refresh)
+        }
+        response = self.client.post(reverse('logout-v3'), data=data)
+        print(response.data)
+        self.assertEqual(response.status_code, 200)
 
 
 

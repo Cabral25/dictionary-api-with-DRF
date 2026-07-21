@@ -1,8 +1,6 @@
 from .views import *
 from django.urls import path
 
-from rest_framework_simplejwt.views import TokenObtainPairView
-
 urlpatterns = [
     path('words/', ListWordsV3.as_view(), name='list-words-v3'),
     path('words/search/', SearchWordViewV3.as_view(), name='search-word-v3'),
