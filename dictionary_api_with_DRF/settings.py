@@ -50,6 +50,7 @@ INSTALLED_APPS = [
     'rest_framework.authtoken',
     'dictionary_api',
     'django_extensions',
+    'rest_framework_simplejwt.token_blacklist',
 ]
 
 MIDDLEWARE = [

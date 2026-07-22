@@ -1,5 +1,6 @@
 from rest_framework.test import APITestCase
 from rest_framework_simplejwt.tokens import RefreshToken, AccessToken
+from rest_framework_simplejwt.token_blacklist.models import BlacklistedToken, OutstandingToken
 
 from django.urls import reverse
 from django.contrib.auth import get_user_model
@@ -149,6 +150,85 @@ class TestLogoutViewV3(APITestCase):
         response = self.client.post(reverse('logout-v3'), data=data)
         print(response.data)
         self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data['message'], 'Logout realizado com sucesso.')
+
+    
+    def test_refresh_token_is_blacklisted(self):
+
+        user = User.objects.create_user(
+            username='admin',
+            password='12345'
+        )
+        
+        self.client.force_authenticate(user=user)
+        refresh = RefreshToken.for_user(user)
+        self.client.credentials(
+            HTTP_AUTHORIZATION=f'Bearer {str(refresh.access_token)}'
+        )
+
+        data = {
+            'refresh': str(refresh)
+        }
+        self.client.post(reverse('logout-v3'), data=data)
+        outstanding_token = OutstandingToken.objects.get(user=user)
+        self.assertTrue(BlacklistedToken.objects.filter(token=outstanding_token).exists())
+
+    
+    def test_unauthenticated_user_cannot_logout(self):
+
+        user = User.objects.create_user(
+            username='admin',
+            password='12345'
+        )
+        
+        refresh = RefreshToken.for_user(user)
+
+        data = {
+            'refresh': str(refresh)
+        }
+        response = self.client.post(reverse('logout-v3'), data=data)
+        print(response.data)
+        self.assertEqual(response.status_code, 403)
+
+    
+    def test_logout_with_invalid_refresh_token(self):
+
+        user = User.objects.create_user(
+            username='admin',
+            password='12345'
+        )
+        self.client.force_authenticate(user=user)
+        
+        refresh = RefreshToken.for_user(user)
+        self.client.credentials(
+            HTTP_AUTHORIZATION=f'Bearer {str(refresh.access_token)}'
+        )
+
+        data = {
+            'refresh': 'token-inválido'
+        }
+        response = self.client.post(reverse('logout-v3'), data=data)
+        print(response.data)
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.data['error'], 'Refresh token inválido.')
+
+    
+    def test_logout_without_refresh_token(self):
+
+        user = User.objects.create_user(
+            username='admin',
+            password='12345'
+        )
+        self.client.force_authenticate(user=user)
+        
+        refresh = RefreshToken.for_user(user)
+        self.client.credentials(
+            HTTP_AUTHORIZATION=f'Bearer {str(refresh.access_token)}'
+        )
+
+        response = self.client.post(reverse('logout-v3'))
+        print(response.data)
+        self.assertEqual(response.status_code, 400)
 
 
 
