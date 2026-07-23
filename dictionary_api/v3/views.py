@@ -64,6 +64,8 @@ class LogoutViewV3(APIView):
 
     def post(self, request):
         refresh_token = request.data.get('refresh')
+        print('request:', request.data)
+        print('token:', refresh_token)
 
         try:
             token = RefreshToken(refresh_token)
@@ -74,7 +76,7 @@ class LogoutViewV3(APIView):
                 },
                 status=status.HTTP_200_OK
             )
-        except Exception:
+        except TokenError:
             return Response(
                 {
                     'error': 'Refresh token inválido.'

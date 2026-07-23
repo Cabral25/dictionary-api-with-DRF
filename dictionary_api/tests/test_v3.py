@@ -219,7 +219,7 @@ class TestLogoutViewV3(APITestCase):
             username='admin',
             password='12345'
         )
-        self.client.force_authenticate(user=user)
+        # self.client.force_authenticate(user=user)
         
         refresh = RefreshToken.for_user(user)
         self.client.credentials(
@@ -228,7 +228,34 @@ class TestLogoutViewV3(APITestCase):
 
         response = self.client.post(reverse('logout-v3'))
         print(response.data)
+        print(refresh)
         self.assertEqual(response.status_code, 400)
+
+
+    def test_blacklisted_refresh_token_cannot_be_used_again(self):
+    
+            user = User.objects.create_user(
+                username='admin',
+                password='12345'
+            )
+            self.client.force_authenticate(user=user)
+            
+            refresh = RefreshToken.for_user(user)
+            self.client.credentials(
+                HTTP_AUTHORIZATION=f'Bearer {str(refresh.access_token)}'
+            )
+    
+            data = {
+                'refresh': str(refresh)
+            }
+            response1 = self.client.post(reverse('logout-v3'), data=data)
+            print(response1.data)
+            self.assertEqual(response1.status_code, 200)
+            self.assertEqual(response1.data['message'], 'Logout realizado com sucesso.')
+            response2 = self.client.post(reverse('logout-v3'), data=data)
+            print(response2.data)
+            self.assertEqual(response2.status_code, 400)
+            self.assertEqual(response2.data['error'], 'Refresh token inválido.')
 
 
 
