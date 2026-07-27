@@ -64,8 +64,14 @@ class LogoutViewV3(APIView):
 
     def post(self, request):
         refresh_token = request.data.get('refresh')
-        print('request:', request.data)
-        print('token:', refresh_token)
+
+        if not refresh_token:
+            return Response(
+                {
+                    'error': 'O refresh token é obrigatório.'
+                },
+                status=status.HTTP_400_BAD_REQUEST
+            )
 
         try:
             token = RefreshToken(refresh_token)
@@ -92,6 +98,14 @@ class RefreshView(APIView):
 
     def post(self, request):
         refresh = request.data.get('refresh')
+
+        if not refresh:
+            return Response(
+                {
+                    'error': 'O refresh token é obrigatório.'
+                },
+                status=status.HTTP_400_BAD_REQUEST
+            )
 
         try:
             token = RefreshToken(refresh)

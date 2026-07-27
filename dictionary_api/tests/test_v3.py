@@ -26,7 +26,6 @@ class TestLoginViewV3(APITestCase):
             'password': '12345'
         }
         response = self.client.post(reverse('login-v3'), data=data)
-        print(response.data)
         self.assertEqual(response.status_code, 200)
         self.assertIn('refresh', response.data)
         self.assertIn('access', response.data)
@@ -46,7 +45,6 @@ class TestLoginViewV3(APITestCase):
         response = self.client.post(reverse('login-v3'), data=data)
         access_token = AccessToken(response.data['access'])
         refresh_token = RefreshToken(response.data['refresh'])
-        print(response.data)
         self.assertIsNotNone(access_token)
         self.assertIsNotNone(refresh_token)
 
@@ -63,7 +61,6 @@ class TestLoginViewV3(APITestCase):
             'password': 'senha_errada'
         }
         response = self.client.post(reverse('login-v3'), data=data)
-        print(response.data)
         self.assertEqual(response.status_code, 403)
         self.assertEqual(response.data['detail'], 'Credenciais inválidas')
 
@@ -74,7 +71,6 @@ class TestLoginViewV3(APITestCase):
             'password': '12345'
         }
         response = self.client.post(reverse('login-v3'), data=data)
-        print(response.data)
         self.assertEqual(response.status_code, 400)
         self.assertEqual(response.data['username'][0], 'This field is required.')
 
@@ -85,7 +81,6 @@ class TestLoginViewV3(APITestCase):
             'username': 'admin',
         }
         response = self.client.post(reverse('login-v3'), data=data)
-        print(response.data)
         self.assertEqual(response.status_code, 400)
         self.assertEqual(response.data['password'][0], 'This field is required.')
 
@@ -103,7 +98,6 @@ class TestLoginViewV3(APITestCase):
         }
         response = self.client.post(reverse('login-v3'), data=data)
         access_token = AccessToken(response.data['access'])
-        print(response.data)
         self.assertEqual(int(access_token['user_id']), user.id)
 
     
@@ -124,7 +118,6 @@ class TestLoginViewV3(APITestCase):
             HTTP_AUTHORIZATION=f'Bearer {access_token}'
         )
         response = self.client.get(reverse('list-words-v3'))
-        print(response.data)
         self.assertEqual(response.status_code, 200)
 
 
@@ -148,7 +141,6 @@ class TestLogoutViewV3(APITestCase):
             'refresh': str(refresh)
         }
         response = self.client.post(reverse('logout-v3'), data=data)
-        print(response.data)
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.data['message'], 'Logout realizado com sucesso.')
 
@@ -187,7 +179,6 @@ class TestLogoutViewV3(APITestCase):
             'refresh': str(refresh)
         }
         response = self.client.post(reverse('logout-v3'), data=data)
-        print(response.data)
         self.assertEqual(response.status_code, 403)
 
     
@@ -208,7 +199,6 @@ class TestLogoutViewV3(APITestCase):
             'refresh': 'token-inválido'
         }
         response = self.client.post(reverse('logout-v3'), data=data)
-        print(response.data)
         self.assertEqual(response.status_code, 400)
         self.assertEqual(response.data['error'], 'Refresh token inválido.')
 
@@ -219,7 +209,7 @@ class TestLogoutViewV3(APITestCase):
             username='admin',
             password='12345'
         )
-        # self.client.force_authenticate(user=user)
+        self.client.force_authenticate(user=user)
         
         refresh = RefreshToken.for_user(user)
         self.client.credentials(
@@ -227,9 +217,8 @@ class TestLogoutViewV3(APITestCase):
         )
 
         response = self.client.post(reverse('logout-v3'))
-        print(response.data)
-        print(refresh)
         self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.data['error'], 'O refresh token é obrigatório.')
 
 
     def test_blacklisted_refresh_token_cannot_be_used_again(self):
@@ -249,19 +238,104 @@ class TestLogoutViewV3(APITestCase):
                 'refresh': str(refresh)
             }
             response1 = self.client.post(reverse('logout-v3'), data=data)
-            print(response1.data)
             self.assertEqual(response1.status_code, 200)
             self.assertEqual(response1.data['message'], 'Logout realizado com sucesso.')
             response2 = self.client.post(reverse('logout-v3'), data=data)
-            print(response2.data)
             self.assertEqual(response2.status_code, 400)
             self.assertEqual(response2.data['error'], 'Refresh token inválido.')
 
 
 
 class TestRefreshView(APITestCase):
-    pass
 
+    def test_valid_refresh_token_returns_access_token(self):
+        user = User.objects.create_user(
+                username='admin',
+                password='12345'
+            )
+            
+        self.client.force_authenticate(user=user)
+        refresh = RefreshToken.for_user(user)
+    
+        data = {
+                'refresh': str(refresh)
+            }
+        response = self.client.post(reverse('refresh'), data=data)
+        self.assertEqual(response.status_code, 200)
+        self.assertIn('access', response.data)
+    
+        
+    def test_returned_refresh_token_is_valid(self):
+
+        user = User.objects.create_user(
+                username='admin',
+                password='12345'
+            )
+            
+        self.client.force_authenticate(user=user)
+        refresh = RefreshToken.for_user(user)
+    
+        data = {
+                'refresh': str(refresh)
+            }
+        response = self.client.post(reverse('refresh'), data=data)
+        access_token = AccessToken(response.data['access'])
+        self.assertEqual(int(access_token['user_id']), user.id)
+        self.assertIn('access', response.data)
+    
+        
+    def test_invalid_refresh_token_returns_401(self):
+    
+        data = {
+                'refresh': 'token-inválido'
+            }
+        response = self.client.post(reverse('refresh'), data=data)
+        self.assertEqual(response.status_code, 401)
+        self.assertEqual(response.data['error'], 'Refresh token inválido.')
+    
+        
+    def test_missing_refresh_token_returns_400(self):
+
+        response = self.client.post(reverse('refresh'))
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.data['error'], 'O refresh token é obrigatório.')
+    
+        
+    def test_blacklisted_refresh_token_cannot_generate_access_token(self):
+
+        user = User.objects.create_user(
+                username='admin',
+                password='12345'
+            )
+        self.client.force_authenticate(user=user)
+            
+        refresh = RefreshToken.for_user(user)
+        refresh.blacklist()
+        data = {
+            'refresh': str(refresh)
+        }
+        response = self.client.post(reverse('refresh'), data=data)
+        self.assertEqual(response.status_code, 401)
+        self.assertEqual(response.data['error'], 'Refresh token inválido.')
+    
+    
+    def test_refresh_generates_new_access_token(self):
+
+        user = User.objects.create_user(
+                    username='admin',
+                    password='12345'
+                )
+        self.client.force_authenticate(user=user)
+                
+        refresh = RefreshToken.for_user(user)
+        original_access = str(refresh.access_token)
+        
+        data = {
+            'refresh': str(refresh)
+        }
+        response = self.client.post(reverse('refresh'), data=data)
+        new_access = response.data['access']
+        self.assertNotEqual(original_access, new_access)
 
 
 class TestListWordsV3(APITestCase):
@@ -272,8 +346,6 @@ class TestListWordsV3(APITestCase):
             meaning='meaning',
         )
         response = self.client.get(reverse('list-words-v3'))
-        print(response.data)
-        print(response.status_code)
         self.assertEqual(response.status_code, 200)
         self.assertIn('example', response.data[0])
         self.assertIn('created_at', response.data[0])
@@ -426,7 +498,6 @@ class TestDetailWordView(APITestCase):
         )
 
         response = self.client.get(reverse('word-detail-v3', kwargs={'word': 'python'}))
-        print(response.data)
         self.assertIn('word', response.data)
         self.assertIn('meaning', response.data)
         self.assertIn('example', response.data)
@@ -636,7 +707,6 @@ class TestDeleteWordView(APITestCase):
         )
 
         self.client.force_authenticate(user=user)
-
         response = self.client.delete(reverse('delete-word-v3', kwargs={'word': 'word'}))
         self.assertEqual(response.status_code, 403)
         self.assertEqual(response.data['detail'], 'You do not have permission to perform this action.')
