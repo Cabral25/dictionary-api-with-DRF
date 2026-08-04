@@ -1,0 +1,46 @@
+# Um container seria como um computador temporário. Se esse container é
+# deletado, tudo dentro dele some. Um volume seria como um HD externo
+# conectado a esse container: se o container for apagado, os dados
+# continuam existindo. Isso só pra dizer que o conteúdo do meu banco
+# de dados (postgresql) fica salvo em postgres_data mesmo quando o
+# container é desfeito.
+
+services: # Define os containers que fazem parte do sistema
+  db: # Container do banco de dados. Usa um volume chamado postgres_data, que é declarado fora dos containers.
+    image: postgres:17
+    container_name: container_do_banco_de_dados
+    env_file:
+      - .env
+    volumes: # <-- named volume
+      - postgres_data:/var/lib/postgresql/data
+    # /var/lib/postgresql/data existe dentro da imagem oficial do postgresql.
+    # É uma pasta padrão que o postgres espera usar. O banco é salvo aqui.
+    ports:
+      - '5432:5432'
+
+  web: # Container da aplicação web
+    build: . # <-- Constrói a imagem usando o Dockerfile do diretório atual
+    container_name: container_aplicacao_web
+    command: python manage.py runserver 0.0.0.0:8000
+    volumes: # <-- bind mount
+      - .:/dictionary_api
+    # Espelha o meu código dentro do container, em que eu
+    # uso a pasta dictionary_api dentro do container. Se eu
+    # mudo o código no computador, ele muda no container e vice-versa.
+    ports:
+      - '8000:8000'
+    env_file:
+      - .env
+    depends_on:
+      - db
+
+
+# Declarando e criando o volume postgres_data. O volume no
+# serviço db só poderá ser USADO dentro do serviço db quando o 
+# volume for declarado e criado.
+volumes:
+  postgres_data:
+
+
+# ps: apenas named volumes precisam ser declarados, o volume
+# da aplicação web é um bind mount, então não precisa ser declarado.
