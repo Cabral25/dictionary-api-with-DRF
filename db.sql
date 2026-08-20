@@ -1,1 +1,0 @@
-SELECT * FROM dictionary_api_word;
