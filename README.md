@@ -1,6 +1,6 @@
 # dictionary-api-with-DRF
 
-API REST para gerenciamento de palavras e seus respectivos significados, desenvolvida com Django REST Framework e PostgreSQL.
+API REST para gerenciamento de palavras e seus respectivos significados, desenvolvida com `Django REST Framework` e `PostgreSQL`.
 
 ## Sobre o projeto
 
@@ -8,54 +8,69 @@ O projeto foi desenvolvido com o objetivo de praticar a construção de APIs RES
 
 ## Funcionalidades
 
-🔹 Cadastro de palavras
-🔹 Consulta de palavras
-🔹 Consulta de uma palavra específica
-🔹 Atualização de palavras
-🔹 Exclusão de palavras
-🔹 Cadastro e gerenciamento de significados
-🔹 Relacionamento entre palavras e significados
-🔹 Validação dos dados através de serializers
-🔹 Persistência dos dados em PostgreSQL
+- Cadastro de palavras
+- Consulta de palavras
+- Consulta de uma palavra específica
+- Atualização de palavras
+- Exclusão de palavras
+- Cadastro e gerenciamento de significados
+- Relacionamento entre palavras e significados
+- Validação dos dados através de serializers
+- Persistência dos dados em PostgreSQL
 
 ## Tecnologias utilizadas
 
-🔹 Python
-🔹 Django
-🔹 Django REST Framework
-🔹 Django Test Framework
-🔹 PostgreSQL
-🔹 Docker
-🔹 Docker Compose
+- Python
+- Django
+- Django REST Framework
+- Django Test Framework
+- PostgreSQL
+- Docker
+- Docker Compose
 
 ## Como executar
 
 Pré-requisitos:
-🔹 Docker
-🔹 Docker compose
+- Python (v. 3.14.5)
+- Django (v. 6.0.5)
+- Django Rest Framework (v. 3.17.1)
+- PostgreSQL
+- Docker
+- Docker compose
 
-1. Clone o repositório
+1. Clone o repositório  
+```
 git clone https://github.com/Cabral25/dictionary-api-with-DRF
+```
+Mude para o diretório do projeto
+```bash
 cd dictionary_api
+```
 
 2. Configure as variáveis de ambiente
 
-Crie um arquivo .env na raiz do projeto:
+Crie um arquivo `.env` na raiz do projeto:
 
-POSTGRES_DB=dictionary_api_with_drf
-POSTGRES_USER=postgres
-POSTGRES_PASSWORD=sua_senha 
-DB_NAME=dictionary_api_with_drf
-DB_USER=postgres 
-DB_PASSWORD=sua_senha 
-DB_HOST=db 
+```
+POSTGRES_DB=dictionary_api_with_drf  
+POSTGRES_USER=postgres  
+POSTGRES_PASSWORD=sua_senha  
+DB_NAME=dictionary_api_with_drf  
+DB_USER=postgres  
+DB_PASSWORD=sua_senha  
+DB_HOST=db  
 DB_PORT=5432
+```
 
-3. Suba os containers
+3. Suba os containers  
+```bash 
 docker compose up -d
+```
 
-4. Execute as migrações
+4. Execute as migrações  
+```bash
 docker compose exec web python manage.py migrate
+```
 
 5. Acesse a API
 
@@ -65,28 +80,33 @@ http://localhost:8000/
 
 ## Endpoints
 
-Método	   Endpoint	                               Descrição
-GET/POST   /api/api-version/words/	               Lista e cria as palavras
-GET        /api/api-version/words/search/          Busca uma palavra
-GET	       /api/api-version/words/{word}/	       Mostra uma palavra em detalhes
-PUT	       /api/api-version/words/update/{word}/   Atualiza uma palavra
-DELETE	   /api/api-version/words/delete/{word}/   Remove uma palavra
-POST       /api/users/register/
-POST       /api/api-version/login                  Realiza o login
-POST       /api/api-version/logout                 Permite realizar o logout
+| Método | Endpoint	| Descrição | 
+|---|---|---|
+| GET/POST | `/api/api-version/words/` | Lista e cria as palavras
+| GET | `/api/api-version/words/search/` | Busca uma palavra
+| GET | `/api/api-version/words/{word}/` | Mostra uma palavra em detalhes
+| PUT | `/api/api-version/words/update/{word}/` | Atualiza uma palavra
+| DELETE | `/api/api-version/words/delete/{word}/` | Remove uma palavra
+| POST | `/api/users/register/` | Realiza o registro de um novo usuário
+| POST | `/api/api-version/login/` | Realiza o login
+| POST | `/api/api-version/logout/` | Permite realizar o logout
 
 ## Exemplos de requisição
 
-Criar uma palavra
+Criar uma palavra:
 
-POST /api/v1/words/
+```
+POST /api/v1/words/  
 Content-Type: application/json
+```
 
-Resposta
-{
-    "word": "backend",
-    "meaning": "Field of software development that handles the logic"
+Resposta:
+```JSON
+{  
+    "word": "backend",  
+    "meaning": "Field of software development that handles the logic"  
 }
+```
 
 ## Banco de dados
 
@@ -95,19 +115,18 @@ O PostgreSQL é executado em um container separado e os dados são persistidos a
 
 ## Testes
 
-Os testes da API foram desenvolvidos utilizando o framework de testes do Django e o 'APITestCase' fornecido pelo Django REST Framework.
-Para executar os testes:
+Os testes da API foram desenvolvidos utilizando o framework de testes do Django e o `APITestCase` fornecido pelo Django REST Framework. Cada versão da API recebeu sua própria bateria de testes. Para executar os testes:
 
 ```bash
-docker compose exec web python manage.py test
+docker compose exec web python manage.py test dictionary_api.tests_api
 ```
 
 ## Docker
 
-### O projeto utiliza Docker Compose para executar:
+ O projeto utiliza Docker Compose para executar:
 
-    🔹 aplicação Django
-    🔹 banco de dados PostgreSQL
+    - aplicação Django
+    - banco de dados PostgreSQL
 
 A comunicação entre os containers é realizada através da rede criada pelo Docker Compose.
 
