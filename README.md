@@ -1,4 +1,4 @@
-# dictionary-api-with-DRF
+# Dictionary API with DRF
 
 API REST para gerenciamento de palavras e seus respectivos significados, desenvolvida com `Django REST Framework` e `PostgreSQL`.
 

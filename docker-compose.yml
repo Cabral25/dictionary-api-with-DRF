@@ -15,8 +15,6 @@ services: # Define os containers que fazem parte do sistema
       - postgres_data:/var/lib/postgresql/data
     # /var/lib/postgresql/data existe dentro da imagem oficial do postgresql.
     # É uma pasta padrão que o postgres espera usar. O banco é salvo aqui.
-    ports:
-      - '5432:5432'
 
   web: # Container da aplicação web
     build: . # <-- Constrói a imagem usando o Dockerfile do diretório atual
