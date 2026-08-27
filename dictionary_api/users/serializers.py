@@ -1,4 +1,7 @@
 from rest_framework.serializers import ModelSerializer
+from rest_framework import serializers
+import re
+
 from django.contrib.auth import get_user_model
 
 # from ..models import User
@@ -49,8 +52,29 @@ class UserSerializer(ModelSerializer):
 
 
     def validate_username(self, value):
+        if len(value) < 8:
+            raise serializers.ValidationError('O username deve possuir pelo menos 8 caracteres.')
         return value
 
 
     def validate_password(self, value):
+        if len(value) < 8:
+            raise serializers.ValidationError('A senha deve possuir pelo menos 8 caracteres.')
         return value
+
+
+    def validate_email(self, value):
+        padrao = r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9._]+\.[A-Z|a-z]{2,}\b'
+        resultado = re.search(padrao, value)
+        if not resultado:
+            raise serializers.ValidationError('Email inválido.')
+        return value
+
+def validate_email(value):
+    padrao = r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9._]+\.[A-Z|a-z]{2,}\b'
+    resultado = re.search(padrao, value)
+    if not resultado:
+        print('email inválido')
+    print('email válido')
+
+print(validate_email('ade@gmail.com'))
