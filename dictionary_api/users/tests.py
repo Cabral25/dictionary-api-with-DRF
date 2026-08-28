@@ -15,7 +15,6 @@ class TestsUserCreateView(APITestCase):
             'email': 'a@gmail.com'
         }
         response = self.client.post(reverse('register'), data=data)
-        print(response.data)
         self.assertEqual(response.status_code, 201)
 
 
@@ -27,7 +26,6 @@ class TestsUserCreateView(APITestCase):
     }
 
         response = self.client.post(reverse('register'), data)
-
         self.assertEqual(response.status_code, 201)
         self.assertNotIn('password', response.data)
 
@@ -40,9 +38,9 @@ class TestsUserCreateView(APITestCase):
         }
 
         self.client.post(reverse('register'), data)
-        user = User.objects.get(username='user')
+        user = User.objects.get(username='user___-')
         self.assertNotEqual(user.password, 'SenhaForte123!')
-        self.assertTrue(user.check_password('12345'))
+        self.assertTrue(user.check_password('12345678'))
 
     
     def test_duplicate_username(self):
@@ -58,7 +56,6 @@ class TestsUserCreateView(APITestCase):
         }
 
         response = self.client.post(reverse('register'), data)
-        print(response.data)
         self.assertEqual(response.status_code, 400)
         self.assertEqual(response.data['username'][0], 'A user with that username already exists.')
 
@@ -81,7 +78,6 @@ class TestsUserCreateView(APITestCase):
         }
 
         response = self.client.post(reverse('register'), data)
-        print(response.data)
         self.assertEqual(response.status_code, 400)
         self.assertEqual(response.data['password'][0], 'This field is required.')
 
@@ -94,7 +90,6 @@ class TestsUserCreateView(APITestCase):
         }
 
         response = self.client.post(reverse('register'), data)
-        print(response.data)
         self.assertEqual(response.status_code, 400)
         self.assertEqual(response.data['password'][0], 'A senha deve possuir pelo menos 8 caracteres.')
 
@@ -107,7 +102,6 @@ class TestsUserCreateView(APITestCase):
             }
     
         response = self.client.post(reverse('register'), data)
-        print(response.data)
         self.assertEqual(response.status_code, 400)
         self.assertEqual(response.data['username'][0], 'O username deve possuir pelo menos 8 caracteres.')
 
@@ -120,5 +114,5 @@ class TestsUserCreateView(APITestCase):
         }
 
         response = self.client.post(reverse('register'), data)
-
         self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.data['email'][0], 'Enter a valid email address.')

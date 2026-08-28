@@ -103,16 +103,4 @@ class WordModelTest(TestCase):
         self.assertIsNone(word.created_by)
 
 
-# Testes dos serializers
-
-
-class UserSerializerTest(TestCase):
-    pass
-
-
-
-class WordSerializerTest(TestCase):
-    pass
-
-
 # Create your tests here.
