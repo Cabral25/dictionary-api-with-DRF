@@ -18,31 +18,65 @@ from ..views import (
 )
 
 
+"""
+    A versão 3 dessa API utiliza o JWTauthentication como
+    método de autenticação.
+"""
+
+
 class ListWordsV3(BaseAPIViewV3, BaseListWords):
+    """
+        Endpoint que permite listar as palavras
+        registradas e registrar novas. Usa a versão 
+        3 do serializador de palavras. Qualquer um 
+        pode acessar essa rota, mas somente admins 
+        podem criar objetos.
+    """
     pass
 
 
 
 class DetailWordViewV3(BaseDetailWordView):
+    """
+        Rota que permite mostrar em detalhes uma
+        palavra registrada. Usa a versão 3 do
+        serializador de palavras. Qualquer um pode
+        acessar essa rota.
+    """
     serializer_class = WordSerializerV3
 
 
 
 class SearchWordViewV3(BaseSearchWordView):
+    """
+        View que permite buscar uma palavra.
+        Qualquer um tem acesso.
+    """
     serializer_class = WordSerializerV3
 
 
 
 class UpdateWordViewV3(BaseAPIViewV3, BaseUpdateWordView):
+    """
+        Permite visualizar e atualizar uma palavra.
+        Apenas administradores podem acessar essa view.
+    """
     pass
 
 
 
 class DeleteWordViewV3(BaseAPIViewV3, BaseDeleteWordView):
+    """
+        Permite apagar uma palavra.
+        Apenas administradores podem apagar palavras.
+    """
     pass
 
 
 class LoginViewV3(BaseLoginView):
+    """
+        Permite ao usuário fazer login.
+    """
     
     def post(self, request):
 
@@ -59,6 +93,9 @@ class LoginViewV3(BaseLoginView):
 
 
 class LogoutViewV3(APIView):
+    """
+        Permite ao usuário fazer logout.
+    """
     
     permission_classes = [IsAuthenticated]
 
@@ -93,6 +130,12 @@ class LogoutViewV3(APIView):
 
 
 class RefreshView(APIView):
+    """
+        View responsável por gerar um novo access token a partir de um refresh token válido.
+        O cliente deve enviar o refresh token no corpo da requisição.
+        Caso o token seja válido, um novo access token é retornado.
+        Caso contrário, a API retorna uma mensagem de erro.
+    """
 
     permission_classes = [AllowAny]
 

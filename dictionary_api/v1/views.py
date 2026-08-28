@@ -18,6 +18,11 @@ from ..views import (
 )
 
 
+"""
+    A versão 1 usa o método de autenticação padrão do Django.
+"""
+
+
 class ListWords(BaseListWords):
     """
         Endpoint que permite listar as palavras

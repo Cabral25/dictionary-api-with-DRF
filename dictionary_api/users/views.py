@@ -5,9 +5,14 @@ from ..models import User
 from .serializers import UserSerializer
 
 
+"""
+    Views referentes aos usuários.
+"""
+
+
 class UserCreateView(CreateAPIView):
     """
-        ...
+        View para o registro de novos usuários.
     """
     queryset = User.objects.all()
     serializer_class = UserSerializer

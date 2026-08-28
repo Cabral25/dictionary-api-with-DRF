@@ -18,6 +18,12 @@ from ..views import (
 )
 
 
+"""
+    A versão 2 dessa API utiliza o Token Authentication como
+    método de autenticação.
+"""
+
+
 class ListWordsv2(BaseAPIViewV2, BaseListWords):
     """
         Endpoint que permite listar as palavras
@@ -43,23 +49,32 @@ class DetailWordViewV2(BaseDetailWordView):
 class SearchWordViewV2(BaseSearchWordView):
     """"
         View que permite buscar uma palavra.
-        Qualquer um tem acesso.
+        Qualquer um tem acesso a essa rota.
     """
     serializer_class = WordSerializerV2
 
 
 
 class UpdateWordViewV2(BaseAPIViewV2, BaseUpdateWordView):
+    """
+        Permite atualizar uma palavra.
+    """
     pass
 
 
 
 class DeleteWordViewV2(BaseAPIViewV2, BaseDeleteWordView):
+    """
+        Permite deletar uma palavra. 
+    """
     pass
 
 
 
 class LoginViewV2(BaseLoginView):
+    """
+        Permite ao usuário fazer login.
+    """
     
     def post(self, request):
 
@@ -76,6 +91,9 @@ class LoginViewV2(BaseLoginView):
 
 
 class LogoutViewV2(APIView):
+    """
+        Permite ao usuário fazer logout
+    """
     
     authentication_classes = [TokenAuthentication]
     permission_classes = [IsAuthenticated]

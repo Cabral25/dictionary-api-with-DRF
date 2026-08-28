@@ -21,6 +21,12 @@ from rest_framework_simplejwt.authentication import JWTAuthentication
 from django.contrib.auth import authenticate
 
 
+"""
+    Aqui estão as classes que servem como base para todas
+    as versões dessa API.
+"""
+
+
 class BaseListWords(ListCreateAPIView):
     """
         Classe base que serve para listar e
