@@ -21,6 +21,25 @@ from ..views import (
 """
     A versão 2 dessa API utiliza o Token Authentication como
     método de autenticação.
+    Funciona assim:
+
+        1. O usuário envia suas credenciais, como username
+           e password.
+        2. A API verifica se essas credenciais são válidas.
+        3. Se forem válidas, a API fornece um token associado
+           àquele usuário.
+        4. O cliente deve enviar esse token em todas as requisições
+           para endpoints protegidas, geralmente no header:
+
+                Authorization: Token seu_token_aqui
+        
+        5. O DRF verifica se o token existe e identifica o usuário
+           associado a ele, disponibilizando-o através do request.user.
+
+    Diferentemente da autenticação por sessão, não é necessário
+    manter um cookie de sessão. E, diferentemente da versão 3,
+    esse token normalmente é um valor armazenado no banco de dados
+    e associado diretamente ao usuário.
 """
 
 
@@ -92,7 +111,7 @@ class LoginViewV2(BaseLoginView):
 
 class LogoutViewV2(APIView):
     """
-        Permite ao usuário fazer logout
+        Permite ao usuário fazer logout.
     """
     
     authentication_classes = [TokenAuthentication]

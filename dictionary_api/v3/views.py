@@ -20,7 +20,31 @@ from ..views import (
 
 """
     A versão 3 dessa API utiliza o JWTauthentication como
-    método de autenticação.
+    método de autenticação. Esse método funciona através
+    de dois tokens: o access token e o refresh token.
+    Funciona assim:
+
+        1. O usuário envia suas credenciais, como username
+        e password, para fazer login.
+        2. A API verifica se as credenciais são válidas e
+        retorna um access token e um refresh token.
+        3. O cliente usa o access token para acessar
+        endpoints protegidos, enviando-o no header:
+
+            Authorization: Bearer seu_access_token_aqui
+
+        4. O JWTAuthentication verifica se o token é válido
+        e identifica o usuário, disponibilizando-o através
+        de request.user.
+        5. Quando o access token expira, o cliente pode
+        enviar o refresh token para obter um novo access token,
+        sem precisar fazer login novamente.
+
+    A principal diferença em relação à autenticação por token
+    da versão 2 é que, no JWT, o token carrega informações
+    assinadas e possui um tempo de expiração definido,
+    enquanto o refresh token permite renovar o acesso sem
+    exigir um novo login.
 """
 
 
@@ -131,10 +155,10 @@ class LogoutViewV3(APIView):
 
 class RefreshView(APIView):
     """
-        View responsável por gerar um novo access token a partir de um refresh token válido.
-        O cliente deve enviar o refresh token no corpo da requisição.
+        Gera um novo access token a partir de um refresh token válido.  
+        O cliente deve enviar o refresh token no corpo da requisição.  
         Caso o token seja válido, um novo access token é retornado.
-        Caso contrário, a API retorna uma mensagem de erro.
+        Caso contrário, retorna uma mensagem de erro.
     """
 
     permission_classes = [AllowAny]

@@ -19,7 +19,24 @@ from ..views import (
 
 
 """
-    A versão 1 usa o método de autenticação padrão do Django.
+    A versão 1 usa o método de autenticação padrão do Django, o Session Authentication.
+    Funciona desse jeito:
+      1. O usuário envia seu username e password para a API.
+      2. O Django verifica se existe um usuário com essas credenciais
+         usando `authenticate()`.
+      3. Se as credenciais estiverem corretas, `login()` cria uma `sessão`
+         para aquele usuário.
+      4. O Django envia ao cliente um cookie de sessão, normalmente
+         chamado `sessionid`.
+      5. Nas próximas requisições, o cliente envia esse cookie, e o
+         Django identifica automaticamente qual usuário está fazendo
+         a requisição através de `request.user`.
+      6. Quando o usuário faz logout, a sessão é encerrada e o cookie
+         deixa de representar um usuário autenticado.
+
+    Em outras palavras, a autenticação por sessão funciona com o servidor mantendo
+    informações da sessão e o cliente enviando apenas um identificador através do
+    cookie.
 """
 
 
