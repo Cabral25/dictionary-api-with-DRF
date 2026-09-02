@@ -12,7 +12,7 @@ from .serializers import UserSerializer
 
 class UserCreateView(CreateAPIView):
     """
-        View para o registro de novos usuários.
+        Registra novos usuários.
     """
     queryset = User.objects.all()
     serializer_class = UserSerializer

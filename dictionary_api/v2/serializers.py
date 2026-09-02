@@ -31,9 +31,9 @@ class WordSerializerV2(ModelSerializer):
 
     def validate_word(self, value):
 
-        if value.isdigit():
+        if any(char.isdigit() for char in value):
             raise serializers.ValidationError(
-                'Uma palavra não pode conter apenas números.'
+                'A palavra não pode conter números.'
             )
         return value
 

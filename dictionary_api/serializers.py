@@ -35,8 +35,6 @@ from .models import Word
 """
 
 
-
-
 class WordSerializer(ModelSerializer):
     """
         Serializer responsável pela serialização e
