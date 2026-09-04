@@ -76,7 +76,7 @@ docker compose exec web python manage.py migrate
 
 A API estará disponível em:
 
-http://localhost:8000/
+http://dictionary_api_with_DRF.onrender.com/
 
 ## Endpoints
 
