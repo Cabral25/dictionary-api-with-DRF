@@ -25,3 +25,6 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Faz uma cópia do diretório no meu computador dentro do diretório principal da imagem do container
 # COPY <origem> <destino> --> COPY <dictionary_api/> </dictionary_api>
 COPY . .
+
+
+CMD ["sh", "-c", "gunicorn dictionary_api_with_DRF.wsgi:application --bind 0.0.0.0:$PORT"]
