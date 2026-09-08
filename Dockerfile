@@ -27,4 +27,4 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY . .
 
 
-CMD ["sh", "-c", "gunicorn dictionary_api_with_DRF.wsgi:application --bind 0.0.0.0:$PORT"]
+CMD ["sh", "-c", "python manage.py migrate && gunicorn dictionary_api_with_DRF.wsgi:application --bind 0.0.0.0:$PORT"]
