@@ -26,9 +26,6 @@ class UserSerializer(ModelSerializer):
         - username
         - password
         - email
-        - is_staff
-        - is_superuser
-        - is_active
 
         O campo password é definido como write_only,
         permitindo que a senha seja enviada no cadastro,

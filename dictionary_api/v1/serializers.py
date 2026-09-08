@@ -18,11 +18,11 @@ class WordSerializerV1(ModelSerializer):
     class Meta:
         model = Word
         fields = ['word', 'meaning']
-        read_only_fields = [
+        """read_only_fields = [
             'created_by',
             'created_at',
             'updated_at'
-        ]
+        ]"""
     
     def validate_word(self, value):
 
