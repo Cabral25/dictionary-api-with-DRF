@@ -15,6 +15,10 @@ class Command(BaseCommand):
         email = os.getenv('DJANGO_SUPERUSER_EMAIL')
         password = os.getenv('DJANGO_SUPERUSER_PASSWORD')
 
+        self.stdout.write(f"USERNAME configurado: {bool(username)}")
+        self.stdout.write(f"EMAIL configurado: {bool(email)}")
+        self.stdout.write(f"PASSWORD configurado: {bool(password)}")
+
         if not username or not password:
             self.stdout.write(
                 self.style.WARNING(
