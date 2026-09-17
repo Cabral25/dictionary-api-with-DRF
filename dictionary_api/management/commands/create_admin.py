@@ -6,7 +6,7 @@ from django.contrib.auth import get_user_model
 
 
 class Command(BaseCommand):
-    help = 'Cria o superusuário caso ele ainda não não exista.'
+    help = 'Cria o superusuário caso ele ainda não exista.'
 
     def handle(self, *args, **options):
         User = get_user_model()
